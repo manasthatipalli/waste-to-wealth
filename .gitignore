@@ -27,3 +27,4 @@ node_modules/
 .dataconnect
 .venv/
 test/
+__pycache__/
