@@ -1,0 +1,2788 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Waste Marketplace</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="icon" href="media/logo-img.png">
+    <style>
+        .user-info-display-clickable { 
+    cursor: pointer; 
+    transition: background-color 0.2s; 
+}
+.user-info-display-clickable:hover { 
+    background-color: #e5e7eb; 
+}
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: #f0fdf4; 
+            background-image: linear-gradient(to bottom right, #f0fdf4, #ecfeff);
+            transition: background-image 0.5s ease-in-out, background-color 0.5s ease-in-out;
+        }
+        .page-section { display: none; } 
+        .main-card { border-top: 4px solid #0d9488; }
+        .selection-card { transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease; cursor: pointer; border: 1px solid #e5e7eb; }
+        .selection-card:hover { transform: translateY(-4px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1); border-color: #14b8a6; }
+        .spinner { border: 4px solid rgba(0, 0, 0, 0.1); width: 36px; height: 36px; border-radius: 50%; border-left-color: #0d9488; animation: spin 1s ease infinite; }
+        .product-card { transition: all 0.3s ease; cursor: pointer; }
+        .product-card:hover { transform: translateY(-2px); box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.2); }
+        .profile-card { cursor: pointer; transition: all 0.2s ease; }
+        .profile-card:hover { background-color: #f9fafb; }
+        .product-image { width: 100%; height: 300px; object-fit: cover; border-radius: 16px; display: block; }
+        .full-screen-products { min-height: 100vh; }
+        .reward-card { transition: all 0.3s ease; cursor: pointer; }
+        .reward-card:hover { transform: translateY(-2px); box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.2); }
+        .modal-overlay { background-color: rgba(0, 0, 0, 0.5); backdrop-filter: blur(4px); }
+        .qr-code-placeholder { width: 250px; height: 250px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; text-align: center; border-radius: 12px; }
+        .checkout-summary { position: sticky; top: 20px; }
+        /* Video background styles */
+        #bg-video {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: -100;
+            object-fit: cover;
+            filter: brightness(0.8); /* No blur */
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        .fade-in { animation: fadeIn 0.2s ease-out; }
+    </style>
+</head>
+<body class="antialiased text-gray-800 bg-gray-50 flex flex-col min-h-screen">
+    
+    <video autoplay muted loop playsinline id="bg-video" class="hidden">
+    <source src="media/video.mp4" type="video/mp4">
+    Your browser does not support the video tag.
+</video>
+
+<header id="main-app-header" class="bg-white shadow-sm sticky top-0 z-20 w-full p-4">
+   <div class="flex flex-col items-start space-y-4 w-full">
+        
+        <div class="relative" id="main-profile-switcher">
+            <button id="main-profile-menu-button" class="flex items-center space-x-3 bg-white p-2 rounded-lg border border-gray-200 hover:bg-gray-50 transition">
+                <div class="w-10 h-10 bg-teal-500 rounded-full flex items-center justify-center text-white font-bold text-lg" id="main-profile-initials"></div>
+                <h2 class="text-lg font-bold text-gray-900" id="main-profile-name"></h2>
+                <svg class="w-5 h-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
+            </button>
+            <div id="main-profile-dropdown-menu" class="absolute left-0 mt-2 w-72 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 hidden z-10">
+            </div>
+        </div>
+
+        <div class="flex items-center space-x-4">
+            
+            <button id="history-btn" class="bg-blue-500 text-white py-2 px-4 rounded-lg font-semibold hover:bg-blue-600 transition flex items-center space-x-2 text-sm">
+            </button>
+
+            <button id="rewards-btn" class="bg-yellow-500 text-white py-2 px-4 rounded-lg font-semibold hover:bg-yellow-600 transition flex items-center space-x-2 text-sm">
+                <span>Rewards</span>
+            </button>
+            
+            <div id="user-info-display" class="bg-gray-100 border border-gray-200 rounded-lg p-2 text-sm">
+                <p id="user-info-name" class="font-bold text-gray-800"></p>
+                <p id="user-info-email" class="text-gray-600"></p>
+            </div>
+
+        </div>
+
+    </div>
+</header>
+<main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-grow flex flex-col">
+
+<div class="container mx-auto max-w-4xl w-full">
+        
+        <section id="loading-section" class="page-section justify-center items-center">
+             <div class="spinner"></div>
+        </section>
+       <section id="login-section" class="page-section main-card max-w-lg mx-auto bg-white/70 backdrop-blur-sm p-8 rounded-xl shadow-lg">
+            <h1 class="text-3xl font-bold text-center text-gray-900 mb-6">Sign In</h1>
+            <form id="login-form">
+                <div class="mb-4"> <label for="login-email" class="block text-sm font-medium text-gray-700 mb-2">Email Address</label> <input type="email" id="login-email" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500" required> </div>
+                <div class="mb-6 relative"> <label for="login-password" class="block text-sm font-medium text-gray-700 mb-2">Password</label> <input type="password" id="login-password" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 pr-10" required> <span class="absolute inset-y-0 right-0 flex items-center pr-3 cursor-pointer top-7" id="toggle-login-password"> <svg id="eye-login" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 616 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg> <svg id="eye-off-login" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7 .946-3.112 3.586-5.545 6.81-6.444M15 12a3 3 0 11-6 0 3 3 0 616 0zm6.364 4.364l-2.286-2.286A6.975 6.975 0 0019 12c-1.274-4.057-5.064-7-9.542-7-.834 0-1.644.11-2.424.314M3 3l18 18" /></svg> </span> </div>
+                <button type="submit" class="w-full bg-teal-600 text-white py-2.5 rounded-lg font-semibold text-lg hover:bg-teal-700 transition">Sign In</button>
+            </form>
+            <p id="login-error" class="text-red-500 text-center mt-4 text-sm"></p>
+            <p class="text-center text-gray-600 mt-6">Don't have an account? <a href="#" id="show-register-flow" class="font-medium text-teal-600 hover:text-teal-800">Register</a></p>
+        </section>
+        <section id="initial-choice-section" class="page-section">
+            <h1 class="text-3xl font-bold text-center text-gray-900 mb-2">Join Us</h1>
+            <p class="text-center text-gray-600 mb-10">First, please select your role to get started.</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-2xl mx-auto">
+                <div id="select-seller" class="selection-card bg-white p-8 rounded-lg shadow-md text-center">
+                    <h2 class="text-2xl font-semibold mb-4 text-teal-700">I am a Seller</h2>
+                    <p>Provide waste from your household, restaurant, or event.</p>
+                </div>
+                <div id="select-buyer" class="selection-card bg-white p-8 rounded-lg shadow-md text-center">
+                    <h2 class="text-2xl font-semibold mb-4 text-teal-700">I am a Buyer</h2>
+                    <p>Find processed or unprocessed materials for your needs.</p>
+                </div>
+           </div>
+        <p id="back-to-login-link" class="text-center mt-8"><a href="#" class="back-btn font-medium text-teal-600 hover:text-teal-800" data-target="login-section">&larr; Back to Login</a></p>
+        <p id="back-to-profiles-link" class="text-center mt-8" style="display: none;"><a href="#" id="go-back-to-profiles" class="font-medium text-teal-600 hover:text-teal-800">&larr; Back to Profiles</a></p>
+    </section>
+        <section id="seller-options-section" class="page-section">
+            <button class="back-btn mb-6 font-medium text-teal-600 hover:text-teal-800" data-target="initial-choice-section">&larr; Back to Role Selection</button>
+            <h1 class="text-3xl font-bold text-center text-gray-900 mb-8">Seller Categories</h1>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-4xl mx-auto">
+                <div class="selection-card final-choice bg-white p-6 rounded-lg shadow-md text-center" data-category="Household">Household</div>
+                <div class="selection-card final-choice bg-white p-6 rounded-lg shadow-md text-center" data-category="Restaurant">Restaurant</div>
+                <div class="selection-card final-choice bg-white p-6 rounded-lg shadow-md text-center" data-category="Event">Event</div>
+                <div class="selection-card final-choice bg-white p-6 rounded-lg shadow-md text-center" data-category="Bakeries">Bakeries</div>
+                <div class="selection-card final-choice bg-white p-6 rounded-lg shadow-md text-center" data-category="Juice Shops">Juice Shops</div>
+                <div class="selection-card final-choice bg-white p-6 rounded-lg shadow-md text-center" data-category="Hostels">Hostels</div>
+                <div class="selection-card final-choice bg-white p-6 rounded-lg shadow-md text-center" data-category="Canteen">Canteen</div>
+                <div class="selection-card final-choice bg-white p-6 rounded-lg shadow-md text-center" data-category="Temples">Temples</div>
+                <div class="selection-card final-choice bg-white p-6 rounded-lg shadow-md text-center" data-category="Mosques">Mosques</div>
+                <div class="selection-card final-choice bg-white p-6 rounded-lg shadow-md text-center" data-category="Churches">Churches</div>
+                <div class="selection-card final-choice bg-white p-6 rounded-lg shadow-md text-center" data-category="Others">Others</div>
+            </div>
+        </section>
+        <section id="buyer-options-section" class="page-section">
+    <button class="back-btn mb-6 font-medium text-teal-600 hover:text-teal-800" data-target="initial-choice-section">&larr; Back to Role Selection</button>
+    <h1 class="text-3xl font-bold text-center text-gray-900 mb-8">Buyer: Material Type</h1>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-2xl mx-auto">
+        <div id="select-processed" class="selection-card bg-white p-8 rounded-lg shadow-md text-center"><h2 class="text-2xl font-semibold">Processed</h2></div>
+        <div id="select-unprocessed" class="selection-card bg-white p-8 rounded-lg shadow-md text-center"><h2 class="text-2xl font-semibold">Unprocessed</h2></div>
+    </div>
+</section>
+
+<section id="processed-options-section" class="page-section">
+    <button class="back-btn mb-6 font-medium text-teal-600 hover:text-teal-800" data-target="buyer-options-section">&larr; Back to Material Type</button>
+    <h1 class="text-3xl font-bold text-center text-gray-900 mb-8">Processed Material Users</h1>
+    <div class="grid grid-cols-2 md:grid-cols-3 gap-4 text-center">
+        <div class="selection-card final-choice bg-white p-4 rounded-lg shadow-sm" data-category="Biofuel Producers">Biofuel Producers</div>
+        <div class="selection-card final-choice bg-white p-4 rounded-lg shadow-sm" data-category="Fertilizer Companies">Fertilizer Companies</div>
+        <div class="selection-card final-choice bg-white p-4 rounded-lg shadow-sm" data-category="Cosmetic Industry">Cosmetic Industry</div>
+        <div class="selection-card final-choice bg-white p-4 rounded-lg shadow-sm" data-category="Paper & Packaging">Paper & Packaging</div>
+        <div class="selection-card final-choice bg-white p-4 rounded-lg shadow-sm" data-category="Animal Feed">Animal Feed</div>
+        <div class="selection-card final-choice bg-white p-4 rounded-lg shadow-sm" data-category="Natural Dye Producers">Natural Dye Producers</div>
+        <div class="selection-card final-choice bg-white p-4 rounded-lg shadow-sm" data-category="Enzyme Suppliers">Enzyme Suppliers</div>
+        <div class="selection-card final-choice bg-white p-4 rounded-lg shadow-sm" data-category="Essential Oil Extractors">Essential Oil Extractors</div>
+        <div class="selection-card final-choice bg-white p-4 rounded-lg shadow-sm" data-category="Snack Manufacturers">Snack Manufacturers</div>
+        <div class="selection-card final-choice bg-white p-4 rounded-lg shadow-sm" data-category="Vinegar & Oil Producers">Vinegar & Oil Producers</div>
+        <div class="selection-card final-choice bg-white p-4 rounded-lg shadow-sm" data-category="Soap & Candle Makers">Soap & Candle Makers</div>
+        <div class="selection-card final-choice bg-white p-4 rounded-lg shadow-sm" data-category="Natural Cleaners (DIY)">Natural Cleaners (DIY)</div>
+        <div class="selection-card final-choice bg-white p-4 rounded-lg shadow-sm" data-category="Air Freshener Makers (DIY)">Air Freshener Makers (DIY)</div>
+        <div class="selection-card final-choice bg-white p-4 rounded-lg shadow-sm" data-category="Textile Artists">Textile Artists</div>
+        <div class="selection-card final-choice bg-white p-4 rounded-lg shadow-sm" data-category="Households (Infusions)">Households (Infusions)</div>
+        <div class="selection-card final-choice bg-white p-4 rounded-lg shadow-sm" data-category="Restaurants">Restaurants</div>
+        <div class="selection-card final-choice bg-white p-4 rounded-lg shadow-sm" data-category="Bakeries">Bakeries</div>
+        <div class="selection-card final-choice bg-white p-4 rounded-lg shadow-sm" data-category="Others">Others</div>
+    </div>
+</section>
+      
+        
+        <section id="register-section" class="page-section main-card max-w-md mx-auto bg-white p-8 rounded-xl shadow-lg">
+             <h1 id="register-title" class="text-3xl font-bold text-center text-gray-900 mb-2">Create Your Account</h1>
+             <p id="register-info" class="text-center text-gray-500 mb-6"></p>
+             <form id="register-form">
+                <div class="mb-4"> <label id="entity-name-label" for="entity-name-input" class="block text-sm font-medium text-gray-700 mb-2">Name</label> <input type="text" id="entity-name-input" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500" required> </div>
+                <div class="mb-4"> <label for="register-email" class="block text-sm font-medium text-gray-700 mb-2">Email Address</label> <input type="email" id="register-email" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500" required> </div>
+                <div class="mb-4 relative"> <label for="register-password" class="block text-sm font-medium text-gray-700 mb-2">Password</label> <input type="password" id="register-password" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 pr-10" required> <span class="absolute inset-y-0 right-0 flex items-center pr-3 cursor-pointer top-7" id="toggle-register-password"> <svg id="eye-register" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 616 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg> <svg id="eye-off-register" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7 .946-3.112 3.586-5.545 6.81-6.444M15 12a3 3 0 11-6 0 3 3 0 616 0zm6.364 4.364l-2.286-2.286A6.975 6.975 0 0019 12c-1.274-4.057-5.064-7-9.542-7-.834 0-1.644.11-2.424.314M3 3l18 18" /></svg> </span> </div>
+                <button type="submit" class="w-full bg-teal-600 text-white py-2.5 rounded-lg font-semibold text-lg hover:bg-teal-700 transition">Register</button>
+            </form>
+             <p id="register-error" class="text-red-500 text-center mt-4 text-sm"></p>
+             <p class="text-center mt-4"><a href="#" id="back-to-category-btn" class="back-btn font-medium text-teal-600 hover:text-teal-800" data-target="">&larr; Back to Categories</a></p>
+             <p id="register-login-link" class="text-center text-gray-600 mt-6">Already have an account? <a href="#" class="show-login-form font-medium text-teal-600 hover:text-teal-800">Sign In</a></p>
+        </section>
+        
+        <section id="pending-verification-section" class="page-section main-card max-w-lg mx-auto bg-white p-8 rounded-xl shadow-lg text-center">
+             <h1 class="text-3xl font-bold text-gray-900 mb-4">Profile Pending Review</h1>
+             <p class="text-gray-600 mb-6">Your new profile is under review. You can continue to use your other profiles while you wait.</p>
+             <button id="back-to-dashboard-btn" class="w-full bg-gray-500 text-white py-2.5 rounded-lg font-semibold mb-4 hover:bg-gray-600 transition">Back to Dashboard</button>
+             <button id="logout-btn-pending" class="w-full bg-red-500 text-white py-2.5 rounded-lg font-semibold hover:bg-red-600 transition">Logout</button>
+        </section>
+        
+        <section id="profile-dashboard-section" class="page-section main-card max-w-2xl mx-auto bg-white p-8 rounded-xl shadow-lg">
+            <div id="dashboard-header" class="flex justify-between items-center mb-6">
+                <h1 class="text-3xl font-bold text-gray-900">Your Profiles</h1>
+                <div class="flex items-center space-x-2">
+                    <button id="admin-panel-btn" class="bg-indigo-600 text-white py-2 px-4 rounded-lg font-semibold hover:bg-indigo-700 transition hidden">Admin Panel</button>
+                    <button id="logout-btn" class="bg-red-500 text-white py-2 px-4 rounded-lg font-semibold hover:bg-red-600 transition">Logout</button>
+                </div>
+            </div>
+            <div id="profile-list" class="space-y-4 mb-8"></div>
+            <button id="add-new-profile-btn" class="w-full bg-teal-600 text-white py-3 rounded-lg font-semibold text-lg hover:bg-teal-700 transition"> + Add New Profile </button>
+        </section>
+
+    <section id="seller-products-section" class="page-section full-screen-products bg-gray-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
+        <div class="space-y-10 pending-products-section"></div>
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8 flex flex-col md:flex-row md:space-x-8">
+
+    <div class="md:w-2/3 space-y-8">
+        
+        <div class="product-card bg-white p-8 rounded-2xl shadow-xl border border-gray-200">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+                <img src="media/veg.jpg" alt="Vegetable Peels" class="product-image">
+               <div id="veg-reward-preview" class="mt-4" style="display: none;">
+    <label class="block text-sm font-medium text-gray-700 mb-2">Your Graduate Reward</label>
+    <div class="bg-gray-50 p-4 rounded-lg">
+        <img id="veg-reward-image" src="" alt="Graduate Reward" class="product-image"> <div class="mt-4"> <p id="veg-reward-text" class="text-gray-700 font-semibold"></p>
+            <p class="text-xs text-gray-500">You'll receive this for free after your probation period!</p>
+        </div>
+    </div>
+</div>
+            </div>
+                <div>
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-3xl font-bold text-gray-800">Vegetable Peels</h3>
+                        <button type="button" onclick="clearProductCard('veg')" class="text-sm text-red-600 hover:text-red-800 font-semibold px-2 py-1 rounded hover:bg-red-50 transition">Clear Section</button>
+                    </div>
+                     <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Quantity Details</label>
+                        <textarea rows="4" placeholder="e.g., 2-5 kg daily, mostly carrot, onion, potato peels" id="veg-description" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 resize-none text-lg" onchange="validateSellerForm()"></textarea>
+                    </div>
+                    <div class="mb-6">
+                        <label for="veg-image-upload" class="block text-sm font-medium text-gray-700 mb-2">Upload Image of Peels</label>
+                        <input type="file" id="veg-image-upload" multiple  accept="image/*" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100">
+                        <div id="veg-image-preview" class="mt-4 hidden relative flex items-center space-x-3 bg-gray-100 p-2 rounded-lg">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-green-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                            <button type="button" class="text-gray-400 hover:text-gray-600 focus:outline-none" onclick="clearImage('veg')"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" /></svg></button>
+                        </div>
+                    </div>
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Peel Quality</label>
+                        <div class="flex items-center space-x-4">
+                            <label class="flex items-center"><input type="radio" name="veg-quality" value="Good" class="focus:ring-green-500 h-4 w-4 text-green-600 border-gray-300" onchange="validateSellerForm()"><span class="ml-2 text-gray-700">Good</span></label>
+                            <label class="flex items-center"><input type="radio" name="veg-quality" value="Average" class="focus:ring-yellow-500 h-4 w-4 text-yellow-600 border-gray-300" onchange="validateSellerForm()"><span class="ml-2 text-gray-700">Average</span></label>
+                            <label class="flex items-center"><input type="radio" name="veg-quality" value="Poor" class="focus:ring-red-500 h-4 w-4 text-red-600 border-gray-300" onchange="validateSellerForm()"><span class="ml-2 text-gray-700">Poor</span></label>
+                        </div>
+                </div>
+<div class="bg-blue-50 p-4 rounded-lg text-blue-900">
+    <p class="font-bold text-lg">Earn Up To 50 Points/kg!</p>
+    <ul class="text-sm list-disc list-inside mt-2 space-y-1">
+        <li><strong>Probation Rate:</strong> 35 Points/kg (First 2 sales)</li>
+        <li><strong>Graduate Rate:</strong> 45 Points/kg (After 2 sales)</li>
+        <li><strong>Eco-Hero Rate:</strong> 50 Points/kg (With streak bonus)</li>
+    </ul>
+</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="product-card bg-white p-8 rounded-2xl shadow-xl border border-gray-200">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+               <div>
+                <img src="media/fruit.jpg" alt="Fruit Peels" class="product-image">
+              <div id="fruit-reward-preview" class="mt-4" style="display: none;">
+    <label class="block text-sm font-medium text-gray-700 mb-2">Your Graduate Reward</label>
+    <div class="bg-gray-50 p-4 rounded-lg">
+        <img id="fruit-reward-image" src="" alt="Graduate Reward" class="product-image"> <div class="mt-4"> <p id="fruit-reward-text" class="text-gray-700 font-semibold"></p>
+            <p class="text-xs text-gray-500">You'll receive this for free after your probation period!</p>
+        </div>
+    </div>
+</div>
+            </div>
+                <div>
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-3xl font-bold text-gray-800">Fruit Peels</h3>
+                        <button type="button" onclick="clearProductCard('fruit')" class="text-sm text-red-600 hover:text-red-800 font-semibold px-2 py-1 rounded hover:bg-red-50 transition">Clear Section</button>
+                    </div>
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Quantity Details</label>
+                        <textarea rows="4" placeholder="e.g., 1-3 kg daily, citrus peels, apple, banana peels" id="fruit-description" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 resize-none text-lg" onchange="validateSellerForm()"></textarea>
+                    </div>
+                    <div class="mb-6">
+                        <label for="fruit-image-upload" class="block text-sm font-medium text-gray-700 mb-2">Upload Image of Peels</label>
+                        <input type="file" id="fruit-image-upload" multiple  accept="image/*" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100">
+                        <div id="fruit-image-preview" class="mt-4 hidden relative flex items-center space-x-3 bg-gray-100 p-2 rounded-lg">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-green-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                            <button type="button" class="text-gray-400 hover:text-gray-600 focus:outline-none" onclick="clearImage('fruit')"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" /></svg></button>
+                        </div>
+                    </div>
+                   <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Peel Quality</label>
+                        <div class="flex items-center space-x-4">
+                            <label class="flex items-center"><input type="radio" name="fruit-quality" value="Good" class="focus:ring-green-500 h-4 w-4 text-green-600 border-gray-300" onchange="validateSellerForm()"><span class="ml-2 text-gray-700">Good</span></label>
+                            <label class="flex items-center"><input type="radio" name="fruit-quality" value="Average" class="focus:ring-yellow-500 h-4 w-4 text-yellow-600 border-gray-300" onchange="validateSellerForm()"><span class="ml-2 text-gray-700">Average</span></label>
+                            <label class="flex items-center"><input type="radio" name="fruit-quality" value="Poor" class="focus:ring-red-500 h-4 w-4 text-red-600 border-gray-300" onchange="validateSellerForm()"><span class="ml-2 text-gray-700">Poor</span></label>
+                        </div>
+<div class="bg-blue-50 p-4 rounded-lg text-blue-900">
+    <p class="font-bold text-lg">Earn Up To 55 Points/kg!</p>
+    <ul class="text-sm list-disc list-inside mt-2 space-y-1">
+        <li><strong>Probation Rate:</strong> 40 Points/kg (First 2 sales)</li>
+        <li><strong>Graduate Rate:</strong> 50 Points/kg (After 2 sales)</li>
+        <li><strong>Eco-Hero Rate:</strong> 55 Points/kg (With streak bonus)</li>
+    </ul>
+</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="md:w-1/3 mt-8 md:mt-0">
+        <div class="checkout-summary bg-white p-6 rounded-2xl shadow-xl border border-gray-200 sticky top-24">
+         <div class="flex justify-between items-center mb-6">
+    <h3 class="text-2xl font-bold text-gray-800">Add Products</h3>
+    <button id="view-pending-btn" class="text-sm bg-yellow-100 text-yellow-800 font-semibold py-1 px-3 rounded-lg hover:bg-yellow-200 transition hidden">
+        View Pending
+    </button>
+</div>
+            <div id="seller-summary" class="space-y-4 mb-6">
+                <div class="text-center text-gray-500 py-8">
+                    <svg class="w-12 h-12 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                    <p>Fill in descriptions to add your products</p>
+                </div>
+            </div>
+            <div class="border-t pt-4">
+                <div class="mb-4">
+                    <label for="seller-address" class="block text-sm font-medium text-gray-700 mb-2">Pickup Address</label>
+                    <textarea id="seller-address" rows="3" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500" placeholder="Enter your full address for pickup..."></textarea>
+                </div>
+                <button id="add-products-btn" class="w-full bg-blue-600 text-white py-4 px-6 rounded-lg font-semibold text-lg hover:bg-blue-700 transition disabled:bg-gray-400 disabled:cursor-not-allowed" disabled>Add Products</button>
+                <button id="cancel-edit-btn" class="w-full bg-gray-500 text-white py-2 px-6 rounded-lg font-semibold mt-2 hover:bg-gray-600 transition hidden">Cancel Edit</button>
+                <p id="seller-validation-message" class="text-xs text-gray-500 mt-2 text-center">Please add products and a pickup address.</p>
+            </div>
+        </div>
+    </div>
+
+</div>
+</section>
+<section id="edit-submission-section" class="page-section full-screen-products bg-gray-50">
+    <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div class="bg-white p-8 rounded-2xl shadow-xl border border-gray-200">
+            <div class="flex justify-between items-center mb-6 border-b pb-4">
+                <h1 class="text-3xl font-bold text-gray-800">Edit Your Submission</h1>
+                <a href="#" id="back-to-seller-dashboard" class="text-sm bg-gray-200 text-gray-800 font-semibold py-2 px-4 rounded-lg hover:bg-gray-300 transition">
+                    &larr; Back
+                </a>
+            </div>
+
+            <div class="space-y-8">
+                <div>
+                    <h3 class="text-2xl font-bold text-gray-700 mb-4">Vegetable Peels</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <label for="edit-veg-description" class="block text-sm font-medium text-gray-700 mb-1">Quantity Details</label>
+                            <textarea id="edit-veg-description" rows="3" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"></textarea>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Peel Quality</label>
+                            <div class="flex items-center space-x-4">
+                                <label class="flex items-center"><input type="radio" name="edit-veg-quality" value="Good" class="focus:ring-green-500 h-4 w-4 text-green-600 border-gray-300"><span class="ml-2 text-gray-700">Good</span></label>
+                                <label class="flex items-center"><input type="radio" name="edit-veg-quality" value="Average" class="focus:ring-yellow-500 h-4 w-4 text-yellow-600 border-gray-300"><span class="ml-2 text-gray-700">Average</span></label>
+                                <label class="flex items-center"><input type="radio" name="edit-veg-quality" value="Poor" class="focus:ring-red-500 h-4 w-4 text-red-600 border-gray-300"><span class="ml-2 text-gray-700">Poor</span></label>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Current Images</label>
+                            <div id="edit-veg-images-preview" class="flex flex-wrap gap-4 p-2 bg-gray-100 rounded-lg min-h-[100px]">
+                                </div>
+                        </div>
+                        <div>
+                            <label for="edit-veg-image-upload" class="block text-sm font-medium text-gray-700 mb-1">Upload New Images (to add or replace)</label>
+                            <input type="file" id="edit-veg-image-upload" multiple accept="image/*" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100">
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                     <h3 class="text-2xl font-bold text-gray-700 mb-4">Fruit Peels</h3>
+                     <div class="space-y-4">
+                        <div>
+                            <label for="edit-fruit-description" class="block text-sm font-medium text-gray-700 mb-1">Quantity Details</label>
+                            <textarea id="edit-fruit-description" rows="3" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"></textarea>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Peel Quality</label>
+                            <div class="flex items-center space-x-4">
+                                <label class="flex items-center"><input type="radio" name="edit-fruit-quality" value="Good" class="focus:ring-green-500 h-4 w-4 text-green-600 border-gray-300"><span class="ml-2 text-gray-700">Good</span></label>
+                                <label class="flex items-center"><input type="radio" name="edit-fruit-quality" value="Average" class="focus:ring-yellow-500 h-4 w-4 text-yellow-600 border-gray-300"><span class="ml-2 text-gray-700">Average</span></label>
+                                <label class="flex items-center"><input type="radio" name="edit-fruit-quality" value="Poor" class="focus:ring-red-500 h-4 w-4 text-red-600 border-gray-300"><span class="ml-2 text-gray-700">Poor</span></label>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Current Images</label>
+                            <div id="edit-fruit-images-preview" class="flex flex-wrap gap-4 p-2 bg-gray-100 rounded-lg min-h-[100px]">
+                                </div>
+                        </div>
+                        <div>
+                            <label for="edit-fruit-image-upload" class="block text-sm font-medium text-gray-700 mb-1">Upload New Images (to add or replace)</label>
+                            <input type="file" id="edit-fruit-image-upload" multiple accept="image/*" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-8 border-t pt-6">
+                <button id="save-submission-changes-btn" class="w-full bg-green-600 text-white py-3 px-6 rounded-lg font-semibold text-lg hover:bg-green-700 transition">
+                    Save Changes
+                </button>
+            </div>
+        </div>
+    </div>
+</section>
+<section id="buyer-processed-products-section" class="page-section full-screen-products bg-gray-50">
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-10">
+            <div class="lg:col-span-3 space-y-8">
+                <div class="flex border-b border-gray-200">
+                    <button id="veg-tab-btn" class="py-3 px-6 text-lg font-semibold border-b-2 border-teal-500 text-teal-600 focus:outline-none">🥬 Vegetable Powders</button>
+                    <button id="fruit-tab-btn" class="py-3 px-6 text-lg font-semibold border-b-2 border-transparent text-gray-500 hover:text-gray-700 focus:outline-none">🍊 Fruit Powders</button>
+                </div>
+                
+                <div id="veg-products-wrapper">
+                    <div class="mb-6">
+                        <input type="text" id="veg-product-search" placeholder="🔍 Search Vegetable Powders..." class="w-full md:w-1/2 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500">
+                    </div>
+                    <div id="veg-powders-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+                </div>
+
+                <div id="fruit-products-wrapper" class="hidden">
+                    <div class="mb-6">
+                        <input type="text" id="fruit-product-search" placeholder="🔍 Search Fruit Powders..." class="w-full md:w-1/2 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500">
+                    </div>
+                    <div id="fruit-powders-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+                </div>
+            </div>
+
+            <div class="lg:col-span-1">
+                <div class="checkout-summary bg-white p-6 rounded-2xl shadow-xl border border-gray-200">
+                    <h3 class="text-2xl font-bold text-gray-800 mb-6 text-center">Order Summary</h3>
+                    <div id="checkout-items" class="space-y-4 mb-6">
+                        <div class="text-center text-gray-500 py-8">
+                            <svg class="w-12 h-12 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l-1 12H6l-1-12z"></path></svg>
+                            <p>Add quantities to see your order</p>
+                        </div>
+                    </div>
+                    <div class="border-t pt-4">
+                        <div class="flex justify-between items-center mb-4">
+                            <span class="text-xl font-bold text-gray-800">Total Amount:</span>
+                            <span class="text-2xl font-bold text-green-600" id="checkout-total">₹0</span>
+                        </div>
+                        <button id="proceed-to-payment" class="w-full bg-blue-600 text-white py-4 px-6 rounded-lg font-semibold text-lg hover:bg-blue-700 transition disabled:bg-gray-400 disabled:cursor-not-allowed" disabled>Proceed to Payment</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+    
+<section id="seller-history-section" class="page-section full-screen-products bg-gray-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
+        <div class="text-right mb-4">
+            <a href="#" id="back-to-seller-products" class="font-medium text-teal-600 hover:text-teal-800">
+                &larr; Back to Products
+            </a>
+        </div>
+        <h2 class="text-3xl font-bold text-gray-800 mb-6 text-center">Your Product Submissions</h2>
+        <div id="seller-history-container" class="space-y-6">
+        </div>
+    </div>
+</section>
+<section id="buyer-history-section" class="page-section full-screen-products bg-gray-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
+        <div class="text-right mb-4">
+            <a href="#" id="back-to-buyer-products" class="font-medium text-teal-600 hover:text-teal-800">
+                &larr; Back to Products
+            </a>
+        </div>
+        <h2 class="text-3xl font-bold text-gray-800 mb-6 text-center">Your Order History</h2>
+        <div id="buyer-history-container" class="space-y-6">
+        </div>
+    </div>
+</section>
+        <section id="payment-section" class="page-section full-screen-products bg-gradient-to-br from-green-50 to-blue-50 p-6">
+            <div class="max-w-2xl mx-auto">
+                <div class="flex justify-between items-center mb-8">
+                    <h1 class="text-4xl font-bold text-gray-900">Complete Payment</h1>
+                    <button id="back-to-products-btn" class="bg-gray-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-gray-700 transition">&larr; Back to Products</button>
+                </div>
+                
+                <div class="bg-white p-8 rounded-2xl shadow-xl border border-gray-200">
+                    <div class="mb-8">
+                        <h3 class="text-2xl font-bold text-gray-800 mb-4">Order Summary</h3>
+                        <div class="bg-gray-50 p-6 rounded-lg" id="payment-order-summary">
+                            </div>
+                    </div>
+
+                    <div class="mb-8">
+                        <label for="delivery-location" class="block text-sm font-medium text-gray-700 mb-2">Delivery Location</label>
+                        <textarea id="delivery-location" rows="3" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500" placeholder="Enter your full delivery address..."></textarea>
+                    </div>
+
+                    <div class="text-center mb-8">
+                        <h3 class="text-2xl font-bold text-gray-800 mb-4">Scan QR Code to Pay</h3>
+                       <div class="flex justify-center mb-6">
+                            <img src="media/qrcode.jpg" alt="Payment QR Code" class="w-64 h-64 border-2 border-gray-300 rounded-lg">
+                        </div>
+                        </div>
+                        <div class="bg-blue-50 p-4 rounded-lg">
+                            <p class="text-sm text-blue-800 mb-2">
+                                <svg class="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                Scan the QR code with any UPI app (PhonePe, Google Pay, Paytm, etc.)
+                            </p>
+                            <p class="text-sm text-blue-800">Make sure to pay the exact amount shown above</p>
+                        </div>
+                    </div>
+
+                    <div class="space-y-4">
+                        <button id="complete-payment-btn" class="w-full bg-green-600 text-white py-4 px-6 rounded-lg font-semibold text-lg hover:bg-green-700 transition disabled:bg-gray-400 disabled:cursor-not-allowed" disabled>
+                            I have completed the payment
+                        </button>
+                        <button id="cancel-order-btn" class="w-full bg-gray-500 text-white py-3 px-6 rounded-lg font-semibold hover:bg-gray-600 transition">
+                            Cancel Order
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+     <section id="edit-profile-section" class="page-section full-screen-products bg-gray-50">
+    <div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div class="bg-white p-8 rounded-2xl shadow-xl border border-gray-200">
+            
+            <div class="text-right mb-4">
+                <a href="#" id="back-from-edit-profile" class="font-medium text-teal-600 hover:text-teal-800">
+                    &larr; Back to Products
+                </a>
+            </div>
+
+            <div class="text-center mb-6 border-b pb-4">
+                <h1 class="text-3xl font-bold text-gray-800">Edit Profile</h1>
+            </div>
+
+            <form id="edit-profile-form">
+                <div class="space-y-6">
+                    <div>
+                        <label for="edit-profile-name" class="block text-sm font-medium text-gray-700 mb-1">Profile Name</label>
+                        <input type="text" id="edit-profile-name" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500" required>
+                    </div>
+                    <div>
+                        <label for="edit-profile-email" class="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+                        <input type="email" id="edit-profile-email" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500" required>
+                    </div>
+                </div>
+                <div class="mt-8 border-t pt-6">
+                    <button type="submit" id="save-profile-changes-btn" class="w-full bg-green-600 text-white py-3 px-6 rounded-lg font-semibold text-lg hover:bg-green-700 transition">
+                        Save Changes
+                    </button>
+                    <p id="edit-profile-message" class="text-center mt-4 text-sm"></p>
+                </div>
+            </form>
+        </div>
+    </div>
+</section>
+        <div id="rewards-modal" class="fixed inset-0 modal-overlay z-50 flex items-center justify-center p-4" style="display: none;">
+            <div class="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto fade-in">
+                <div class="p-6 border-b border-gray-200">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <h2 class="text-3xl font-bold text-gray-900">🎉 Rewards Center</h2>
+                            <p class="text-gray-600 mt-2">Earn points for every successful sale and redeem amazing rewards!</p>
+                        </div>
+                        <button id="close-rewards-modal" class="text-gray-500 hover:text-gray-700 text-2xl font-bold">&times;</button>
+                    </div>
+                </div>
+
+                <div class="p-6">
+                    <div class="bg-gradient-to-r from-yellow-400 to-orange-500 rounded-xl p-6 mb-8 text-white">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h3 class="text-xl font-semibold">Your Points Balance</h3>
+                                <p class="text-3xl font-bold mt-2" id="user-points">100 Points</p>
+                                <p class="text-yellow-100 text-sm mt-2">These are your reward points</p>
+                            </div>
+                            <div class="text-6xl opacity-50">🏆</div>
+                        </div>
+                    </div>
+
+                    <div class="bg-blue-50 rounded-xl p-6 mb-8">
+                        <h3 class="text-xl font-bold text-gray-900 mb-4">💡 How Rewards Work</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div class="text-center">
+                                <div class="text-3xl mb-2">📦</div>
+                                <p class="font-semibold text-gray-800">Make Sales</p>
+                                <p class="text-sm text-gray-600">Sell your waste products</p>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-3xl mb-2">⭐</div>
+                                <p class="font-semibold text-gray-800">Earn Points</p>
+                                <p class="text-sm text-gray-600">Get points per sale</p>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-3xl mb-2">🎁</div>
+                                <p class="font-semibold text-gray-800">Redeem Rewards</p>
+                                <p class="text-sm text-gray-600">Exchange for cash or items</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="space-y-8">
+                        <div>
+                            <h3 class="text-2xl font-bold text-gray-900 mb-4">💰 Cash Rewards</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div class="reward-card border border-gray-200 rounded-xl p-6 text-center" data-cost="100">
+                                    <div class="text-4xl mb-3">💵</div>
+                                    <h4 class="text-lg font-bold text-gray-800">₹100 Cash</h4>
+                                    <p class="text-yellow-600 font-semibold text-xl mt-2">100 Points</p>
+                                    <button class="redeem-btn mt-4 bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition disabled:bg-gray-400 disabled:cursor-not-allowed">Redeem</button>
+                                </div>
+                                <div class="reward-card border border-gray-200 rounded-xl p-6 text-center" data-cost="500">
+                                    <div class="text-4xl mb-3">💸</div>
+                                    <h4 class="text-lg font-bold text-gray-800">₹500 Cash</h4>
+                                    <p class="text-yellow-600 font-semibold text-xl mt-2">500 Points</p>
+                                    <button class="redeem-btn mt-4 bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition disabled:bg-gray-400 disabled:cursor-not-allowed">Redeem</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <h3 class="text-2xl font-bold text-gray-900 mb-4">🛒 Grocery Items</h3>
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                <div class="reward-card border border-gray-200 rounded-xl p-4 text-center" data-cost="80">
+                                    <div class="text-3xl mb-2">🥛</div>
+                                    <h4 class="font-bold text-gray-800">1L Milk</h4>
+                                    <p class="text-yellow-600 font-semibold">80 Points</p>
+                                    <button class="redeem-btn mt-3 bg-blue-600 text-white py-2 px-3 rounded-lg text-sm hover:bg-blue-700 transition disabled:bg-gray-400 disabled:cursor-not-allowed">Redeem</button>
+                                </div>
+                                <div class="reward-card border border-gray-200 rounded-xl p-4 text-center" data-cost="120">
+                                    <div class="text-3xl mb-2">🍎</div>
+                                    <h4 class="font-bold text-gray-800">Fresh Fruits</h4>
+                                    <p class="text-yellow-600 font-semibold">120 Points</p>
+                                    <button class="redeem-btn mt-3 bg-blue-600 text-white py-2 px-3 rounded-lg text-sm hover:bg-blue-700 transition disabled:bg-gray-400 disabled:cursor-not-allowed">Redeem</button>
+                                </div>
+                                <div class="reward-card border border-gray-200 rounded-xl p-4 text-center" data-cost="100">
+                                    <div class="text-3xl mb-2">🥕</div>
+                                    <h4 class="font-bold text-gray-800">Vegetables</h4>
+                                    <p class="text-yellow-600 font-semibold">100 Points</p>
+                                    <button class="redeem-btn mt-3 bg-blue-600 text-white py-2 px-3 rounded-lg text-sm hover:bg-blue-700 transition disabled:bg-gray-400 disabled:cursor-not-allowed">Redeem</button>
+                                </div>
+                                <div class="reward-card border border-gray-200 rounded-xl p-4 text-center" data-cost="60">
+                                    <div class="text-3xl mb-2">🍞</div>
+                                    <h4 class="font-bold text-gray-800">Bread Pack</h4>
+                                    <p class="text-yellow-600 font-semibold">60 Points</p>
+                                    <button class="redeem-btn mt-3 bg-blue-600 text-white py-2 px-3 rounded-lg text-sm hover:bg-blue-700 transition disabled:bg-gray-400 disabled:cursor-not-allowed">Redeem</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <h3 class="text-2xl font-bold text-gray-900 mb-4">🧴 Personal Care & Cosmetics</h3>
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                <div class="reward-card border border-gray-200 rounded-xl p-4 text-center" data-cost="70">
+                                    <div class="text-3xl mb-2">🧼</div>
+                                    <h4 class="font-bold text-gray-800">Soap Set</h4>
+                                    <p class="text-yellow-600 font-semibold">70 Points</p>
+                                    <button class="redeem-btn mt-3 bg-blue-600 text-white py-2 px-3 rounded-lg text-sm hover:bg-blue-700 transition disabled:bg-gray-400 disabled:cursor-not-allowed">Redeem</button>
+                                </div>
+                                <div class="reward-card border border-gray-200 rounded-xl p-4 text-center" data-cost="90">
+                                    <div class="text-3xl mb-2">🧴</div>
+                                    <h4 class="font-bold text-gray-800">Shampoo</h4>
+                                    <p class="text-yellow-600 font-semibold">90 Points</p>
+                                    <button class="redeem-btn mt-3 bg-blue-600 text-white py-2 px-3 rounded-lg text-sm hover:bg-blue-700 transition disabled:bg-gray-400 disabled:cursor-not-allowed">Redeem</button>
+                                </div>
+                                <div class="reward-card border border-gray-200 rounded-xl p-4 text-center" data-cost="150">
+                                    <div class="text-3xl mb-2">🧴</div>
+                                    <h4 class="font-bold text-gray-800">Face Cream</h4>
+                                    <p class="text-yellow-600 font-semibold">150 Points</p>
+                                    <button class="redeem-btn mt-3 bg-blue-600 text-white py-2 px-3 rounded-lg text-sm hover:bg-blue-700 transition disabled:bg-gray-400 disabled:cursor-not-allowed">Redeem</button>
+                                </div>
+                                <div class="reward-card border border-gray-200 rounded-xl p-4 text-center" data-cost="40">
+                                    <div class="text-3xl mb-2">🪥</div>
+                                    <h4 class="font-bold text-gray-800">Toothbrush Set</h4>
+                                    <p class="text-yellow-600 font-semibold">40 Points</p>
+                                    <button class="redeem-btn mt-3 bg-blue-600 text-white py-2 px-3 rounded-lg text-sm hover:bg-blue-700 transition disabled:bg-gray-400 disabled:cursor-not-allowed">Redeem</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="pending-profile-modal" class="fixed inset-0 modal-overlay z-50 flex items-center justify-center p-4" style="display: none;">
+            <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full text-center p-8 fade-in">
+                <div class="text-6xl mb-4">⏳</div>
+                <h2 class="text-2xl font-bold text-gray-800 mb-3">Profile Under Review</h2>
+                <p class="text-gray-600 mb-6">This profile is still pending verification. You will get access to the product pages once it has been approved by an administrator.</p>
+                <button id="close-pending-modal" class="bg-teal-600 text-white py-2 px-6 rounded-lg font-semibold hover:bg-teal-700 transition">OK</button>
+            </div>
+        </div>
+</div>
+<div id="pending-submissions-modal" class="fixed inset-0 modal-overlay z-50 flex items-center justify-center p-4" style="display: none;">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto fade-in">
+        <div class="p-6 border-b border-gray-200 flex justify-between items-center">
+            <h2 class="text-2xl font-bold text-gray-900">⏳ Your Pending Submissions</h2>
+            <button id="close-pending-modal-btn" class="text-gray-500 hover:text-gray-700 text-2xl font-bold">&times;</button>
+        </div>
+        <div id="pending-modal-content" class="p-6 space-y-4">
+            </div>
+    </div>
+</div>
+</main>
+
+    <script type="module">
+        import { auth, db, storage } from "./firebase-config.js";
+        import { createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, updateEmail } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+        import { doc, setDoc, getDoc, collection, getDocs, deleteDoc, addDoc, updateDoc, onSnapshot, query, where } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+        import { ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
+        let vegFilesToUpload = [];
+        let fruitFilesToUpload = [];
+let isVegImageValid = true;
+        let isFruitImageValid = true;
+
+        async function compressAndConvertToBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = (event) => {
+                    const img = new Image();
+                    img.src = event.target.result;
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        const ctx = canvas.getContext('2d');
+                        
+                        const MAX_WIDTH = 300;
+                        const MAX_HEIGHT = 300;
+                        let width = img.width;
+                        let height = img.height;
+
+                        if (width > height) {
+                            if (width > MAX_WIDTH) {
+                                height *= MAX_WIDTH / width;
+                                width = MAX_WIDTH;
+                            }
+                        } else {
+                            if (height > MAX_HEIGHT) {
+                                width *= MAX_HEIGHT / height;
+                                height = MAX_HEIGHT;
+                            }
+                        }
+
+                        canvas.width = width;
+                        canvas.height = height;
+                        ctx.drawImage(img, 0, 0, width, height);
+                        
+                       const base64String = canvas.toDataURL('image/jpeg', 0.4);
+                        resolve(base64String);
+                    };
+                    img.onerror = (err) => reject(err);
+                };
+                reader.onerror = (err) => reject(err);
+            });
+        }
+
+        const vegImageUpload = document.getElementById("veg-image-upload");
+        const fruitImageUpload = document.getElementById("fruit-image-upload");
+
+        async function predictImageViaBackend(imageFile) {
+            const formData = new FormData();
+            formData.append("image", imageFile);
+            try {
+                const response = await fetch("http://127.0.0.1:5000/predict", {
+                    method: "POST",
+                    body: formData
+                });
+                if (!response.ok) {
+                    const errData = await response.json();
+                    console.error("Backend error details:", errData.error);
+                    return null;
+                }
+                return await response.json();
+            } catch (error) {
+                console.error("Failed to connect to Python Flask server:", error);
+                return null;
+            }
+        }
+
+        let userRegistrationData = {};
+        let currentSellerProfile = null;
+        let currentBuyerProfile = null;
+        let activeProfile = null;
+        let currentCartData = {};
+        let userPointsListener = null;
+        let currentEditingSubmissionId = null;
+        
+        let imagesToRemove = []; 
+        let filesToUploadVeg = [];
+        let filesToUploadFruit = []; 
+        let currentEditData = {};
+        
+
+        const sections = document.querySelectorAll('.page-section');
+        const profileList = document.getElementById('profile-list');
+        const addNewProfileBtn = document.getElementById('add-new-profile-btn');
+        const loginForm = document.getElementById('login-form');
+        const registerForm = document.getElementById('register-form');
+        const loginError = document.getElementById('login-error');
+        const registerError = document.getElementById('register-error');
+        const backToProductsBtn = document.getElementById('back-to-products-btn');
+        const rewardsBtn = document.getElementById('rewards-btn');
+        const rewardsModal = document.getElementById('rewards-modal');
+        const closeRewardsModal = document.getElementById('close-rewards-modal');
+        const adminPanelBtn = document.getElementById('admin-panel-btn');
+        const cancelOrderBtn = document.getElementById('cancel-order-btn');
+        const bgVideo = document.getElementById('bg-video');
+        const pendingProfileModal = document.getElementById('pending-profile-modal');
+        const closePendingModalBtn = document.getElementById('close-pending-modal');
+        const deliveryLocation = document.getElementById('delivery-location');
+        const completePaymentBtn = document.getElementById('complete-payment-btn');
+        const sellerAddressInput = document.getElementById('seller-address');
+const viewPendingBtn = document.getElementById('view-pending-btn');
+const pendingSubmissionsModal = document.getElementById('pending-submissions-modal');
+const closeSubmissionsModalBtn = document.getElementById('close-pending-modal-btn');
+
+viewPendingBtn.addEventListener('click', () => {
+    pendingSubmissionsModal.style.display = 'flex';
+});
+
+closeSubmissionsModalBtn.addEventListener('click', () => { 
+    pendingSubmissionsModal.style.display = 'none';
+});
+
+pendingSubmissionsModal.addEventListener('click', (e) => {
+    if (e.target === pendingSubmissionsModal) {
+        pendingSubmissionsModal.style.display = 'none';
+    }
+});
+const pendingModalContent = document.getElementById('pending-modal-content');
+const addProductsBtn = document.getElementById('add-products-btn');
+const cancelEditBtn = document.getElementById('cancel-edit-btn');
+
+function resetSellerFormState() {
+    document.getElementById('veg-description').value = '';
+    document.getElementById('fruit-description').value = '';
+    document.querySelectorAll('input[name="veg-quality"], input[name="fruit-quality"]').forEach(r => r.checked = false);
+    clearImage('veg');
+    clearImage('fruit');
+    
+    addProductsBtn.textContent = 'Add Products';
+    addProductsBtn.classList.remove('bg-orange-600', 'hover:bg-orange-700');
+    addProductsBtn.classList.add('bg-blue-600', 'hover:bg-blue-700');
+    cancelEditBtn.classList.add('hidden');
+    
+    currentEditingSubmissionId = null;
+    validateSellerForm();
+}
+
+pendingModalContent.addEventListener('click', (e) => {
+    if (e.target.classList.contains('edit-submission-btn')) {
+        const button = e.target;
+        currentEditingSubmissionId = button.dataset.submissionId;
+        const data = JSON.parse(button.dataset.submissionData);
+
+        document.getElementById('veg-description').value = data.vegetableDescription || '';
+        document.getElementById('fruit-description').value = data.fruitDescription || '';
+
+        if (data.vegetableQuality) {
+            document.querySelector(`input[name="veg-quality"][value="${data.vegetableQuality}"]`).checked = true;
+        }
+        if (data.fruitQuality) {
+            document.querySelector(`input[name="fruit-quality"][value="${data.fruitQuality}"]`).checked = true;
+        }
+        
+        addProductsBtn.textContent = 'Update Submission';
+        addProductsBtn.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+        addProductsBtn.classList.add('bg-orange-600', 'hover:bg-orange-700');
+        cancelEditBtn.classList.remove('hidden');
+
+        pendingSubmissionsModal.style.display = 'none';
+        window.scrollTo(0, 0);
+        validateSellerForm();
+        
+        alert("Form has been populated with your submission data. Note: Images cannot be re-loaded; you can upload new ones to replace them if needed.");
+    }
+});
+
+cancelEditBtn.addEventListener('click', resetSellerFormState);
+     
+        const processedIndustriesNeedingVerification = [ 
+            'Biofuel Producers', 'Fertilizer Companies', 'Cosmetic Industry', 
+            'Paper & Packaging', 'Animal Feed', 'Natural Dye Producers', 
+            'Enzyme Suppliers', 'Essential Oil Extractors', 'Snack Manufacturers', 
+            'Vinegar & Oil Producers', 'Soap & Candle Makers', 'Restaurants', 'Bakeries'
+        ];
+        const tier3Categories = ['Cosmetic Industry', 'Natural Cleaners (DIY)', 'Air Freshener Makers (DIY)', 'Textile Artists', 'Households (Infusions)', 'Restaurants', 'Bakeries'];
+        const tier2Categories = ['Paper & Packaging', 'Natural Dye Producers', 'Enzyme Suppliers', 'Essential Oil Extractors', 'Snack Manufacturers', 'Vinegar & Oil Producers', 'Soap & Candle Makers'];
+const productsData = [
+    { name: 'Mixed Vegetable Powder', type: 'veg', image: 'products/vegpowder2.jpg', prices: { tier1: 300, tier2: 400, tier3: 500 } },
+    { name: 'Carrot Powder', type: 'veg', image: 'products/carrotpowder.jpg', prices: { tier1: 300, tier2: 400, tier3: 500 } },
+    { name: 'Potato Powder', type: 'veg', image: 'products/potatopowder.jpg', prices: { tier1: 300, tier2: 400, tier3: 500 } },
+    { name: 'Onion Powder', type: 'veg', image: 'products/onionpowder.jpg', prices: { tier1: 300, tier2: 400, tier3: 500 } },
+    { name: 'Beetroot Powder', type: 'veg', image: 'products/beetrootpowder.jpg', prices: { tier1: 300, tier2: 400, tier3: 500 } },
+    { name: 'Cabbage Powder', type: 'veg', image: 'products/cabbagepowder.jpg', prices: { tier1: 300, tier2: 400, tier3: 500 } },
+    { name: 'Pumpkin Powder', type: 'veg', image: 'products/pumpkinpowder.jpg', prices: { tier1: 300, tier2: 400, tier3: 500 } },
+    { name: 'Brinjal Powder', type: 'veg', image: 'products/brinjalpowder.jpg', prices: { tier1: 300, tier2: 400, tier3: 500 } },
+
+    { name: 'Mixed Fruit Powder', type: 'fruit', image: 'products/fruitpowder2.jpg', prices: { tier1: 450, tier2: 550, tier3: 650 } },
+    { name: 'Mango Powder', type: 'fruit', image: 'products/mangopowder.jpg', prices: { tier1: 450, tier2: 550, tier3: 650 } },
+    { name: 'Banana Powder', type: 'fruit', image: 'products/bananapowder.jpg', prices: { tier1: 450, tier2: 550, tier3: 650 } },
+    { name: 'Apple Powder', type: 'fruit', image: 'products/applepowder.jpg', prices: { tier1: 450, tier2: 550, tier3: 650 } },
+    { name: 'Pomegranate Powder', type: 'fruit', image: 'products/pomegranatepowder.jpg', prices: { tier1: 450, tier2: 550, tier3: 650 } },
+    { name: 'Pineapple Powder', type: 'fruit', image: 'products/pineapplepowder.jpg', prices: { tier1: 450, tier2: 550, tier3: 650 } },
+    { name: 'Papaya Powder', type: 'fruit', image: 'products/papayapowder.jpg', prices: { tier1: 450, tier2: 550, tier3: 650 } },
+    { name: 'Guava Powder', type: 'fruit', image: 'products/guavapowder.jpg', prices: { tier1: 450, tier2: 550, tier3: 650 } },
+    { name: 'Watermelon Powder', type: 'fruit', image: 'products/watermelonpowder.jpg', prices: { tier1: 450, tier2: 550, tier3: 650 } },
+    { name: 'Sapota Powder', type: 'fruit', image: 'products/sapotapowder.jpg', prices: { tier1: 450, tier2: 550, tier3: 650 } },
+    { name: 'Custard Apple Powder', type: 'fruit', image: 'products/custardapplepowder.jpg', prices: { tier1: 450, tier2: 550, tier3: 650 } },
+    { name: 'Muskmelon Powder', type: 'fruit', image: 'products/muskmelonpowder.jpg', prices: { tier1: 450, tier2: 550, tier3: 650 } },
+    { name: 'Citrus Powder', type: 'fruit', image: 'products/citruspowder.jpg', prices: { tier1: 450, tier2: 550, tier3: 650 } },
+    { name: 'Amla Powder', type: 'fruit', image: 'products/amlapowder.jpg', prices: { tier1: 450, tier2: 550, tier3: 650 } },
+];
+ function showSection(sectionId) {
+    const mainAppHeader = document.getElementById('main-app-header');
+    const container = document.querySelector('.container');
+    
+    sections.forEach(s => s.style.display = 'none');
+    const section = document.getElementById(sectionId);
+    section.style.display = sectionId.includes('loading') ? 'flex' : 'block';
+
+const isProductPage = ['seller-products-section', 'buyer-processed-products-section', 'seller-history-section', 'buyer-history-section', 'payment-section'].includes(sectionId);
+    const mainElement = document.querySelector('main');
+    if (!isProductPage && sectionId !== 'loading-section') {
+        mainElement.classList.add('justify-center');
+    } else {
+        mainElement.classList.remove('justify-center');
+    }
+
+    mainAppHeader.classList.toggle('hidden', !isProductPage);
+    
+    if (isProductPage) {
+        container.style.maxWidth = 'none';
+    } else {
+        container.style.maxWidth = '42rem';
+    }
+    
+    if (sectionId === 'login-section') {
+        bgVideo.classList.remove('hidden');
+        document.body.style.backgroundImage = 'none';
+        document.body.style.backgroundColor = 'transparent';
+    } else {
+        bgVideo.classList.add('hidden');
+        document.body.style.backgroundImage = 'linear-gradient(to bottom right, #f0fdf4, #ecfeff)';
+    }
+
+    document.getElementById('back-to-seller-products')?.classList.toggle('hidden', sectionId !== 'seller-history-section');
+    document.getElementById('back-to-buyer-products')?.classList.toggle('hidden', sectionId !== 'buyer-history-section');
+}
+        function updateRewardsUI(currentUserPoints) {
+            const rewardCards = document.querySelectorAll('.reward-card');
+            rewardCards.forEach(card => {
+                const cost = parseInt(card.dataset.cost);
+                const button = card.querySelector('.redeem-btn');
+                if (button) {
+                    if (currentUserPoints >= cost) {
+                        button.disabled = false;
+                        button.textContent = 'Redeem';
+                        button.classList.remove('bg-gray-400', 'cursor-not-allowed');
+                    } else {
+                        button.disabled = true;
+                        button.textContent = 'Need More';
+                        button.classList.add('bg-gray-400', 'cursor-not-allowed');
+                    }
+                }
+            });
+        }
+
+        function setupPointsListener(userId) {
+            if (userPointsListener) {
+                userPointsListener();
+            }
+            
+            const userDocRef = doc(db, "users", userId);
+            userPointsListener = onSnapshot(userDocRef, (doc) => {
+                if (doc.exists()) {
+                    const points = doc.data().rewardPoints || 0;
+                    console.log('🎯 Points updated:', points);
+                    updatePointsInUI(points);
+                }
+            }, (error) => {
+                console.error('❌ Points listener error:', error);
+            });
+        }
+
+        function updatePointsInUI(points) {
+            const pointsElement = document.getElementById('user-points');
+            if (pointsElement) {
+                pointsElement.textContent = `${points} Points`;
+            }
+            updateRewardsUI(points);
+        }
+
+        async function loadUserPoints() {
+            const user = auth.currentUser;
+            if (!user) return 0;
+            
+            try {
+                const userDoc = await getDoc(doc(db, "users", user.uid));
+                if (userDoc.exists()) {
+                    return userDoc.data().rewardPoints || 0;
+                }
+            } catch (error) {
+                console.error('Error loading user points:', error);
+            }
+            return 0;
+        }
+
+        async function updatePointsDisplay() {
+            const points = await loadUserPoints();
+            updatePointsInUI(points);
+        }
+
+
+
+function validateSellerForm() {
+    const vegDescription = document.getElementById('veg-description').value.trim();
+    const fruitDescription = document.getElementById('fruit-description').value.trim();
+    const address = document.getElementById('seller-address').value.trim();
+    const addBtn = document.getElementById('add-products-btn');
+    const summary = document.getElementById('seller-summary');
+    const validationMessage = document.getElementById('seller-validation-message');
+
+    const isVegQualitySelected = document.querySelector('input[name="veg-quality"]:checked') !== null;
+    const isFruitQualitySelected = document.querySelector('input[name="fruit-quality"]:checked') !== null;
+
+    const hasVegFiles = (typeof vegFilesToUpload !== 'undefined' && vegFilesToUpload.length > 0);
+    const hasFruitFiles = (typeof fruitFilesToUpload !== 'undefined' && fruitFilesToUpload.length > 0);
+
+    const isVegProductActive = vegDescription !== '' && hasVegFiles && isVegQualitySelected;
+    const isFruitProductActive = fruitDescription !== '' && hasFruitFiles && isFruitQualitySelected;
+
+    const areProductsAdded = isVegProductActive || isFruitProductActive;
+    const isAddressAdded = address !== '';
+
+    const isVegStarted = vegDescription !== '' || hasVegFiles || isVegQualitySelected;
+    const isFruitStarted = fruitDescription !== '' || hasFruitFiles || isFruitQualitySelected;
+
+    const isVegInvalid = isVegStarted && !isVegProductActive;
+    const isFruitInvalid = isFruitStarted && !isFruitProductActive;
+
+    let summaryHtml = '';
+    if (isVegProductActive) {
+        summaryHtml += `<div class="flex justify-between items-center py-2 border-b border-gray-200"><div><span class="font-medium">Vegetable Peels</span><br><small class="text-gray-500">All Details Added</small></div><span class="text-green-600">✓</span></div>`;
+    }
+    if (isFruitProductActive) {
+        summaryHtml += `<div class="flex justify-between items-center py-2 border-b border-gray-200"><div><span class="font-medium">Fruit Peels</span><br><small class="text-gray-500">All Details Added</small></div><span class="text-green-600">✓</span></div>`;
+    }
+
+    if (summaryHtml !== '') {
+        summary.innerHTML = summaryHtml;
+    } else {
+        summary.innerHTML = `<div class="text-center text-gray-500 py-8"><svg class="w-12 h-12 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg><p>Complete all fields (description, image, quality) for at least one product.</p></div>`;
+    }
+
+    if (areProductsAdded && isAddressAdded && !isVegInvalid && !isFruitInvalid) {
+        addBtn.disabled = false;
+        validationMessage.textContent = 'All set! You can now add your products.';
+        validationMessage.classList.remove('text-red-500');
+        validationMessage.classList.add('text-green-600');
+    } else {
+        addBtn.disabled = true;
+        validationMessage.classList.remove('text-green-600');
+        validationMessage.classList.add('text-red-500');
+
+        if (isVegInvalid) {
+            validationMessage.textContent = 'Please complete all fields for Vegetable Peels or clear the section.';
+        } else if (isFruitInvalid) {
+            validationMessage.textContent = 'Please complete all fields for Fruit Peels or clear the section.';
+        } else if (!areProductsAdded) {
+            validationMessage.textContent = 'Please complete all fields for at least one product.';
+        } else {
+            validationMessage.textContent = 'Please enter your pickup address.';
+        }
+    }
+}
+window.validateSellerForm = validateSellerForm;
+
+window.clearImage = function(type) {
+   if (type === 'veg') {
+        document.getElementById('veg-image-upload').value = '';
+        const vegFileName = document.getElementById('veg-file-name');
+        if (vegFileName) vegFileName.textContent = '';
+        document.getElementById('veg-image-preview').classList.add('hidden');
+        isVegImageValid = false;
+        vegFilesToUpload = [];
+    } else if (type === 'fruit') {
+        document.getElementById('fruit-image-upload').value = '';
+        const fruitFileName = document.getElementById('fruit-file-name');
+        if (fruitFileName) fruitFileName.textContent = '';
+        document.getElementById('fruit-image-preview').classList.add('hidden');
+        isFruitImageValid = false;
+        fruitFilesToUpload = [];
+    }
+    validateSellerForm();
+}
+document.getElementById('add-products-btn').addEventListener('click', async () => {
+    const user = auth.currentUser;
+    if (!user || !currentSellerProfile) {
+        alert('Error: Please login and select a profile first.');
+        return;
+    }
+
+    const addBtn = document.getElementById('add-products-btn');
+    addBtn.disabled = true;
+
+    if (currentEditingSubmissionId) {
+        addBtn.textContent = 'Updating...';
+        try {
+            const submissionRef = doc(db, "productSubmissions", currentEditingSubmissionId);
+            const updatedData = {
+                vegetableDescription: document.getElementById('veg-description').value.trim(),
+                fruitDescription: document.getElementById('fruit-description').value.trim(),
+                vegetableQuality: document.querySelector('input[name="veg-quality"]:checked')?.value || null,
+                fruitQuality: document.querySelector('input[name="fruit-quality"]:checked')?.value || null,
+                pickupAddress: document.getElementById('seller-address').value.trim(),
+            };
+            await updateDoc(submissionRef, updatedData);
+            alert('✅ Submission updated successfully!');
+            fetchPendingSubmissions(currentSellerProfile);
+        } catch (error) {
+            console.error('❌ Error updating submission:', error);
+            alert('Failed to update submission.');
+        } finally {
+            resetSellerFormState();
+        }
+
+    } else {
+        addBtn.textContent = 'Submitting...';
+        try {
+            let vegImageUrls = [];
+            let fruitImageUrls = [];
+
+       if (vegFilesToUpload.length > 0) {
+                 for (let i = 0; i < vegFilesToUpload.length; i++) {
+                    const file = vegFilesToUpload[i];
+                    const base64Str = await compressAndConvertToBase64(file);
+                    vegImageUrls.push(base64Str);
+                }
+            }
+            if (fruitFilesToUpload.length > 0) {
+                for (let i = 0; i < fruitFilesToUpload.length; i++) {
+                    const file = fruitFilesToUpload[i];
+                    const base64Str = await compressAndConvertToBase64(file);
+                    fruitImageUrls.push(base64Str);
+                }
+            }
+            
+            const submissionData = {
+                userId: user.uid,
+                userEmail: user.email,
+                profileId: currentSellerProfile.id,
+                profileName: currentSellerProfile.profileName,
+                category: currentSellerProfile.category,
+                status: 'pending',
+                submittedAt: new Date().toISOString(),
+                pickupAddress: document.getElementById('seller-address').value.trim(),
+                vegetableDescription: document.getElementById('veg-description').value.trim(),
+                fruitDescription: document.getElementById('fruit-description').value.trim(),
+                vegetableQuality: document.querySelector('input[name="veg-quality"]:checked')?.value || null,
+                fruitQuality: document.querySelector('input[name="fruit-quality"]:checked')?.value || null,
+                vegetableImageURLs: vegImageUrls,
+                fruitImageURLs: fruitImageUrls
+            };
+
+            await addDoc(collection(db, "productSubmissions"), submissionData);
+            alert('🎉 Products submitted successfully!');
+            fetchPendingSubmissions(currentSellerProfile);
+            resetSellerFormState();
+        } catch (error) {
+            console.error('❌ Error submitting products:', error);
+            alert('Failed to submit products: ' + error.message);
+            addBtn.disabled = false;
+            addBtn.textContent = 'Add Products';
+        }
+    }
+});
+function renderProducts(searchTerm = '') {
+    const vegContainer = document.getElementById('veg-powders-container');
+    const fruitContainer = document.getElementById('fruit-powders-container');
+    vegContainer.innerHTML = '';
+    fruitContainer.innerHTML = '';
+    const lowerCaseSearchTerm = searchTerm.toLowerCase();
+    
+    let tierKey = 'tier1';
+    if (currentBuyerProfile) {
+        if (tier2Categories.includes(currentBuyerProfile.category)) tierKey = 'tier2';
+        else if (tier3Categories.includes(currentBuyerProfile.category)) tierKey = 'tier3';
+    }
+
+    const filteredProducts = productsData.filter(p => p.name.toLowerCase().includes(lowerCaseSearchTerm));
+
+    if (filteredProducts.length === 0) {
+        const noResultsHtml = `<p class="text-gray-500 col-span-full text-center">No products found for "${searchTerm}"</p>`;
+        vegContainer.innerHTML = noResultsHtml;
+        fruitContainer.innerHTML = noResultsHtml;
+        return;
+    }
+    
+    filteredProducts.forEach(product => {
+        const price = product.prices[tierKey];
+        const productHtml = `
+    <div class="product-card-buyer bg-white rounded-lg shadow-md overflow-hidden flex flex-col" data-product-name-filter="${product.name.toLowerCase()}">
+        <img src="${product.image}" alt="${product.name}" class="product-image">
+        <div class="p-4 flex flex-col flex-grow">
+            <h4 class="text-lg font-bold text-gray-800">${product.name}</h4>
+            <p class="text-xl font-semibold text-teal-600 mt-1 mb-3">₹${price} <span class="text-sm font-normal text-gray-500">/ kg</span></p>
+            <div class="mt-auto">
+                <label class="text-sm text-gray-600">Quantity (kg):</label>
+                <input type="number" min="0" placeholder="0" 
+                    class="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
+                    oninput="updateCheckout()"
+                    data-product-name="${product.name}"
+                    data-price="${price}">
+            </div>
+        </div>
+    </div>
+`;
+        if (product.type === 'veg') vegContainer.innerHTML += productHtml;
+        else fruitContainer.innerHTML += productHtml;
+    });
+}
+
+function updateCheckout() {
+    const checkoutItems = document.getElementById('checkout-items');
+    const checkoutTotal = document.getElementById('checkout-total');
+    const proceedBtn = document.getElementById('proceed-to-payment');
+    let total = 0;
+    let itemsHtml = '';
+    currentCartData = { items: [], total: 0 };
+    
+    document.querySelectorAll('#buyer-processed-products-section input[type="number"]').forEach(input => {
+        const quantity = parseInt(input.value) || 0;
+        if (quantity > 0) {
+            const name = input.dataset.productName;
+            const price = parseFloat(input.dataset.price);
+            const itemTotal = quantity * price;
+            total += itemTotal;
+            
+            itemsHtml += `<div class="flex justify-between items-center py-2 border-b border-gray-200"><div><span class="font-medium">${name}</span><br><small class="text-gray-500">${quantity} kg × ₹${price}</small></div><span class="font-semibold">₹${itemTotal.toFixed(2)}</span></div>`;
+            
+            currentCartData.items.push({ name, quantity, price, total: itemTotal });
+        }
+    });
+
+    if (total > 0) {
+        checkoutItems.innerHTML = itemsHtml;
+        checkoutTotal.textContent = `₹${total.toFixed(2)}`;
+        proceedBtn.disabled = false;
+        currentCartData.total = total;
+    } else {
+        checkoutItems.innerHTML = `<div class="text-center text-gray-500 py-8"><svg class="w-12 h-12 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l-1 12H6l-1-12z"></path></svg><p>Add quantities to see your order</p></div>`;
+        checkoutTotal.textContent = '₹0';
+        proceedBtn.disabled = true;
+    }
+}
+window.updateCheckout = updateCheckout;
+
+
+       
+        window.updateCheckout = updateCheckout;
+      
+
+        function showPaymentPage() {
+            const orderSummary = document.getElementById('payment-order-summary');
+            
+            let summaryHtml = '';
+            let grandTotal = currentCartData.total;
+            
+            currentCartData.items.forEach(item => {
+                summaryHtml += `
+                    <div class="flex justify-between items-center mb-3">
+                        <div>
+                            <span class="text-lg font-medium text-gray-700">${item.name}:</span>
+                            <br><small class="text-gray-500">${item.quantity} kg × ₹${item.price}</small>
+                        </div>
+                        <span class="text-lg font-semibold text-gray-900">₹${item.total}</span>
+                    </div>
+                `;
+            });
+            
+            summaryHtml += `
+                <hr class="my-4">
+                <div class="flex justify-between items-center">
+                    <span class="text-xl font-bold text-gray-800">Total Amount:</span>
+                    <span class="text-2xl font-bold text-green-600">₹${grandTotal}</span>
+                </div>
+            `;
+            
+            orderSummary.innerHTML = summaryHtml;
+            showSection('payment-section');
+        }
+
+        document.getElementById('proceed-to-payment').addEventListener('click', showPaymentPage);
+   
+
+       deliveryLocation.addEventListener('input', () => { 
+    completePaymentBtn.disabled = deliveryLocation.value.trim() === ''; 
+});
+
+document.getElementById('complete-payment-btn').addEventListener('click', async () => {
+    const user = auth.currentUser;
+    const address = document.getElementById('delivery-location').value.trim();
+
+    if (!user || !currentBuyerProfile) {
+        return alert('Error: Cannot identify user or buyer profile.');
+    }
+    if (!currentCartData || !currentCartData.items || currentCartData.items.length === 0) {
+        return alert('Error: Your cart is empty.');
+    }
+    if (!address) {
+        return alert('Please provide a delivery address.');
+    }
+
+    const btn = document.getElementById('complete-payment-btn');
+    btn.disabled = true;
+    btn.textContent = 'Processing Order...';
+
+    try {
+        await addDoc(collection(db, "orders"), {
+            userId: user.uid,
+            profileId: currentBuyerProfile.id,
+            profileName: currentBuyerProfile.profileName,
+            items: currentCartData.items,
+            grandTotal: currentCartData.total,
+            deliveryAddress: address,
+            orderDate: new Date().toISOString(),
+            status: 'Processing'
+        });
+
+        alert('✅ Thank you! Your order has been placed successfully.');
+        
+        showBuyerProducts(currentBuyerProfile);
+
+    } catch (error) {
+        console.error("Error placing order: ", error);
+        alert("There was an error placing your order. Please try again.");
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'I have completed the payment';
+    }
+});
+
+backToProductsBtn?.addEventListener('click', () => {
+    if (currentBuyerProfile) {
+        showSection('buyer-processed-products-section');
+    }
+});
+        rewardsBtn?.addEventListener('click', async () => {
+            await updatePointsDisplay();
+            rewardsModal.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        });
+
+        closeRewardsModal?.addEventListener('click', () => {
+            rewardsModal.style.display = 'none';
+            document.body.style.overflow = 'auto';
+        });
+
+        rewardsModal?.addEventListener('click', (e) => {
+            if (e.target === rewardsModal) {
+                rewardsModal.style.display = 'none';
+                document.body.style.overflow = 'auto';
+            }
+        });
+        
+        async function displayProfileDashboard(user) {
+            try {
+                const profilesRef = collection(db, "users", user.uid, "profiles");
+                const profileSnapshot = await getDocs(profilesRef);
+                profileList.innerHTML = '';
+                
+                if (profileSnapshot.empty) {
+                    profileList.innerHTML = `<p class="text-center text-gray-500">You haven't created any profiles yet. Add one below!</p>`;
+                } else {
+                    profileSnapshot.forEach(doc => {
+                        const profile = doc.data();
+                        const verificationStatus = profile.isVerified ? 
+                            `<span class="text-xs font-semibold text-green-700 bg-green-100 px-2 py-1 rounded-full">Verified</span>` : 
+                            `<span class="text-xs font-semibold text-yellow-700 bg-yellow-100 px-2 py-1 rounded-full">Pending</span>`;
+                        
+                        const clickableClass = (profile.role === 'Seller' || profile.role === 'Buyer') ? 'profile-card clickable-profile' : '';
+                        const clickableData = (profile.role === 'Seller' || profile.role === 'Buyer') ? `data-profile='${JSON.stringify({...profile, id: doc.id})}'` : '';
+                        
+                        profileList.innerHTML += `
+                            <div class="bg-gray-50 border border-gray-200 p-4 rounded-lg flex justify-between items-center ${clickableClass}" ${clickableData}> 
+                                <div class="flex-grow"> 
+                                    <h3 class="font-bold text-lg text-gray-800">${profile.profileName}</h3> 
+                                    <p class="text-sm text-gray-600">${profile.role} - ${profile.category}</p> 
+                                    ${(profile.role === 'Seller' || profile.role === 'Buyer') ? '<p class="text-xs text-teal-600 mt-1">Click to view products</p>' : ''} 
+                                </div> 
+                                <div class="flex items-center space-x-4"> 
+                                    ${verificationStatus} 
+                                    <button data-profile-id="${doc.id}" class="delete-btn text-red-500 hover:text-red-700 font-semibold">Delete</button> 
+                                </div> 
+                            </div>
+                        `;
+                    });
+                }
+                showSection('profile-dashboard-section');
+            } catch (error) {
+                console.error('Error displaying profiles:', error);
+                alert('Error loading profiles. Please try again.');
+            }
+        }
+
+    async function fetchPendingSubmissions(profile) {
+    const viewPendingBtn = document.getElementById('view-pending-btn');
+    const pendingModalContent = document.getElementById('pending-modal-content');
+    
+    viewPendingBtn.classList.add('hidden');
+    pendingModalContent.innerHTML = '';
+
+    const submissionsRef = collection(db, "productSubmissions");
+    const q = query(submissionsRef, where("profileId", "==", profile.id), where("status", "==", "pending"));
+    const querySnapshot = await getDocs(q);
+
+    if (!querySnapshot.empty) {
+        let modalHtml = '';
+        let pendingCount = 0;
+        querySnapshot.forEach(doc => {
+            pendingCount++;
+            const data = doc.data();
+            const date = new Date(data.submittedAt).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' });
+
+            modalHtml += `
+                <div class="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-sm text-gray-500 mb-2">Submitted on: ${date}</p>
+                            ${data.vegetableDescription ? `<div><p class="font-semibold text-gray-800">Vegetable Peels:</p><p class="text-gray-600 pl-2">${data.vegetableDescription}</p></div>` : ''}
+                            ${data.fruitDescription ? `<div class="mt-2"><p class="font-semibold text-gray-800">Fruit Peels:</p><p class="text-gray-600 pl-2">${data.fruitDescription}</p></div>` : ''}
+                        </div>
+                        <a href="#edit?id=${doc.id}" class="edit-submission-link text-sm bg-blue-100 text-blue-800 font-semibold py-1 px-3 rounded-lg hover:bg-blue-200 transition">
+                            Edit
+                        </a>
+                    </div>
+                </div>
+            `;
+        });
+        
+        pendingModalContent.innerHTML = modalHtml;
+        viewPendingBtn.textContent = `View Pending (${pendingCount})`;
+        viewPendingBtn.classList.remove('hidden');
+    }
+}
+async function setupSubmissionListener(profileId) {
+    const submissionsRef = collection(db, "productSubmissions");
+    const q = query(submissionsRef, where("profileId", "==", profileId), where("status", "==", "approved"));
+
+    onSnapshot(q, (snapshot) => {
+        snapshot.docChanges().forEach(change => {
+            if (change.type === "modified") {
+                const data = change.doc.data();
+                if (data.status === "approved") {
+                    if (data.vegetableDescription) {
+                        document.getElementById('veg-description').value = '';
+                        clearImage('veg');
+                    }
+                    if (data.fruitDescription) {
+                        document.getElementById('fruit-description').value = '';
+                        clearImage('fruit');
+                    }
+                    validateSellerForm();
+                    alert('🎉 Great news! Your product submission has been approved and points have been credited to your account.');
+                }
+            }
+        });
+    });
+}
+        async function deleteProfile(profileId) {
+            const user = auth.currentUser;
+            if (!user) return;
+            
+            if (confirm("Are you sure you want to delete this profile?")) {
+                try {
+                    const profileDocRef = doc(db, "users", user.uid, "profiles", profileId);
+                    await deleteDoc(profileDocRef);
+                    await displayProfileDashboard(user);
+                } catch (error) {
+                    console.error('Error deleting profile:', error);
+                    alert('Error deleting profile. Please try again.');
+                }
+            }
+        }
+        
+
+profileList.addEventListener('click', (e) => {
+    if (e.target.classList.contains('delete-btn')) {
+        deleteProfile(e.target.getAttribute('data-profile-id'));
+    } else {
+        const profileCard = e.target.closest('.clickable-profile');
+        if (profileCard && profileCard.dataset.profile) {
+            const profile = JSON.parse(profileCard.dataset.profile);
+
+            if (profile.isVerified) {
+                if (profile.role === 'Seller') {
+                    showSellerProducts(profile);
+                    setupSubmissionListener(profile.id);
+                } else if (profile.role === 'Buyer') {
+                    showBuyerProducts(profile);
+                }
+            } else {
+                pendingProfileModal.style.display = 'flex';
+            }
+        }
+    }
+});
+
+        closePendingModalBtn?.addEventListener('click', () => {
+            pendingProfileModal.style.display = 'none';
+        });
+
+        onAuthStateChanged(auth, async (user) => {
+            try {
+                if (user) {
+                    console.log('✅ User authenticated:', user.uid);
+                    
+                    const idTokenResult = await user.getIdTokenResult();
+                    if (idTokenResult.claims.admin) {
+                        adminPanelBtn.classList.remove('hidden');
+                    } else {
+                        adminPanelBtn.classList.add('hidden');
+                    }
+
+                    const userDocRef = doc(db, "users", user.uid);
+                    const userDocSnap = await getDoc(userDocRef);
+                    
+                    if (!userDocSnap.exists()) {
+                        console.log('📝 Creating new user document');
+                        await setDoc(userDocRef, { 
+                            email: user.email, 
+                            createdAt: new Date().toISOString(),
+                            rewardPoints: 100
+                        });
+                        await addProfileToCurrentUser(user);
+                    } else {
+                        console.log('✅ User document exists');
+                        const userData = userDocSnap.data();
+                        if (userData.rewardPoints === undefined) {
+                            await updateDoc(userDocRef, {
+                                rewardPoints: 100
+                            });
+                        }
+                        await displayProfileDashboard(user);
+                    }
+                    
+                    setupPointsListener(user.uid);
+                } else {
+                    console.log('❌ User not authenticated');
+                    if (userPointsListener) {
+                        userPointsListener();
+                        userPointsListener = null;
+                    }
+                    adminPanelBtn.classList.add('hidden');
+                    showSection('login-section');
+                }
+            } catch (error) {
+                console.error('❌ Auth error:', error);
+                showSection('login-section');
+            }
+        });
+        
+        async function addProfileToCurrentUser(user) {
+            const currentUser = user || auth.currentUser;
+            
+            if (!userRegistrationData.category) {
+                if (currentUser) await displayProfileDashboard(currentUser);
+                return;
+            }
+            
+            const entityName = document.getElementById('entity-name-input').value;
+            let needsVerification = false;
+            const lowerCaseEntityName = entityName.trim().toLowerCase();
+            
+            if (userRegistrationData.category === 'Restaurant') {
+                if (!lowerCaseEntityName.endsWith('restaurant') && !lowerCaseEntityName.endsWith('hotel')) {
+                    registerError.textContent = 'Name must end with "restaurant" or "hotel".';
+                    return;
+                }
+                needsVerification = true;
+            } else if (userRegistrationData.category === 'Event') {
+                if (!lowerCaseEntityName.endsWith('event') && !lowerCaseEntityName.endsWith('function')) {
+                    registerError.textContent = 'Name must end with "event" or "function".';
+                    return;
+                }
+                needsVerification = true;
+            } else if (userRegistrationData.category === 'Bakeries') {
+                if (!lowerCaseEntityName.endsWith('bakery')) {
+                    registerError.textContent = 'Name must end with "bakery".';
+                    return;
+                }
+                needsVerification = true;
+            } else if (userRegistrationData.category === 'Juice Shops') {
+                if (!lowerCaseEntityName.includes('juice') || (!lowerCaseEntityName.endsWith('shop') && !lowerCaseEntityName.endsWith('center'))) {
+                    registerError.textContent = 'Name must include "juice" and end with "shop" or "center".';
+                    return;
+                }
+                needsVerification = true;
+            } else if (userRegistrationData.category === 'Hostels') {
+                if (!lowerCaseEntityName.endsWith('hostel')) {
+                    registerError.textContent = 'Name must end with "hostel".';
+                    return;
+                }
+                needsVerification = true;
+            } else if (userRegistrationData.category === 'Temples') {
+                if (!lowerCaseEntityName.endsWith('temple')) {
+                    registerError.textContent = 'Name must end with "temple".';
+                    return;
+                }
+                needsVerification = true;
+            } else if (userRegistrationData.category === 'Mosques') {
+                if (!lowerCaseEntityName.endsWith('mosque') && !lowerCaseEntityName.endsWith('masjid')) {
+                    registerError.textContent = 'Name must end with "mosque" or "masjid".';
+                    return;
+                }
+                needsVerification = true;
+            } else if (userRegistrationData.category === 'Churches') {
+                if (!lowerCaseEntityName.endsWith('church')) {
+                    registerError.textContent = 'Name must end with "church".';
+                    return;
+                }
+                needsVerification = true;
+            }
+            else if (processedIndustriesNeedingVerification.includes(userRegistrationData.category)) {
+                if (!lowerCaseEntityName.endsWith('industry') && !lowerCaseEntityName.endsWith('company')) {
+                    registerError.textContent = 'Name must end with "industry" or "company".';
+                    return;
+                }
+                needsVerification = true;
+            }
+            
+            try {
+                const profileDocRef = doc(collection(db, "users", currentUser.uid, "profiles"));
+                await setDoc(profileDocRef, {
+                    profileName: entityName,
+                    role: userRegistrationData.role,
+                    type: userRegistrationData.type,
+                    category: userRegistrationData.category,
+                    isVerified: !needsVerification,
+                    createdAt: new Date().toISOString()
+                });
+                
+                userRegistrationData = {};
+                registerForm.reset();
+                
+                if (needsVerification) {
+                    showSection('pending-verification-section');
+                } else {
+                    await displayProfileDashboard(currentUser);
+                }
+            } catch (error) {
+                console.error("Error adding profile:", error);
+                registerError.textContent = "Could not save profile: " + error.message;
+            }
+        }
+        
+        registerForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            registerError.textContent = '';
+            
+            if (auth.currentUser) {
+                await addProfileToCurrentUser(auth.currentUser);
+            } else {
+                const email = document.getElementById('register-email').value;
+                const password = document.getElementById('register-password').value;
+                
+                if (!userRegistrationData.category) {
+                    registerError.textContent = "Please go back and select a profile type before registering.";
+                    return;
+                }
+                
+                try {
+                    await createUserWithEmailAndPassword(auth, email, password);
+                } catch (error) {
+                    console.error('Registration error:', error);
+                    registerError.textContent = error.code === 'auth/email-already-in-use' ? 
+                        'This email is already registered. Please sign in.' : error.message;
+                }
+            }
+        });
+addNewProfileBtn.addEventListener('click', () => { 
+    registerError.textContent = ''; 
+    document.getElementById('register-title').textContent = 'Add a New Profile'; 
+
+    const emailField = document.getElementById('register-email');
+    const passwordField = document.getElementById('register-password');
+    emailField.parentElement.style.display = 'none';
+    emailField.required = false;
+    passwordField.parentElement.style.display = 'none';
+    passwordField.required = false;
+
+    document.getElementById('register-login-link').style.display = 'none'; 
+    registerForm.reset(); 
+
+    document.getElementById('back-to-login-link').style.display = 'none';
+    document.getElementById('back-to-profiles-link').style.display = 'block';
+
+    showSection('initial-choice-section'); 
+});
+
+document.getElementById('go-back-to-profiles').addEventListener('click', (e) => {
+    e.preventDefault();
+    if (auth.currentUser) {
+        displayProfileDashboard(auth.currentUser);
+    } else {
+        showSection('login-section');
+    }
+});
+document.getElementById('show-register-flow').addEventListener('click', (e) => { 
+    e.preventDefault(); 
+    registerError.textContent = ''; 
+    userRegistrationData = {}; 
+    document.getElementById('register-title').textContent = 'Create Your Account'; 
+
+    const emailField = document.getElementById('register-email');
+    const passwordField = document.getElementById('register-password');
+    emailField.parentElement.style.display = 'block';
+    emailField.required = true;
+    passwordField.parentElement.style.display = 'block';
+    passwordField.required = true;
+    document.getElementById('register-login-link').style.display = 'block'; 
+    registerForm.reset(); 
+
+    document.getElementById('back-to-login-link').style.display = 'block';
+    document.getElementById('back-to-profiles-link').style.display = 'none';
+
+    showSection('initial-choice-section'); 
+});
+
+        loginForm.addEventListener('submit', async (e) => { 
+            e.preventDefault(); 
+            loginError.textContent = ''; 
+            
+            try { 
+                await signInWithEmailAndPassword(auth, 
+                    document.getElementById('login-email').value, 
+                    document.getElementById('login-password').value
+                ); 
+            } catch (error) { 
+                console.error('Login error:', error);
+                loginError.textContent = "Invalid email or password."; 
+            } 
+        });
+
+        adminPanelBtn.addEventListener('click', () => {
+            window.location.href = 'admin.html';
+        });
+        document.getElementById('history-btn').addEventListener('click', () => {
+    if (currentSellerProfile) {
+        showSellerHistory();
+    } else if (currentBuyerProfile) {
+        showBuyerHistory();
+    }
+});
+
+
+document.addEventListener('click', function(e) {
+    if (e.target && e.target.id === 'main-profile-logout-btn') {
+        e.preventDefault();
+        if(auth.currentUser) {
+            displayProfileDashboard(auth.currentUser);
+        }
+    }
+});
+
+document.getElementById('logout-btn').addEventListener('click', () => signOut(auth)); 
+document.getElementById('logout-btn-pending').addEventListener('click', () => signOut(auth));
+        document.getElementById('back-to-dashboard-btn').addEventListener('click', () => { 
+            if (auth.currentUser) displayProfileDashboard(auth.currentUser); 
+        });
+
+        document.querySelectorAll('.show-login-form, .back-btn').forEach(el => { 
+            el.addEventListener('click', (e) => { 
+                e.preventDefault(); 
+                const target = el.getAttribute('data-target') || 'login-section'; 
+                showSection(target); 
+            }); 
+        });
+
+        document.getElementById('select-seller').addEventListener('click', () => { 
+            userRegistrationData = { role: 'Seller', type: 'N/A' }; 
+            showSection('seller-options-section'); 
+        });
+document.getElementById('select-buyer').addEventListener('click', () => { 
+    userRegistrationData = { role: 'Buyer' }; 
+    showSection('buyer-options-section'); 
+});
+
+        const backToCategoryBtn = document.getElementById('back-to-category-btn');
+document.getElementById('select-processed').addEventListener('click', () => { 
+    userRegistrationData.type = 'Processed'; 
+    showSection('processed-options-section'); 
+});
+
+document.getElementById('select-unprocessed').addEventListener('click', () => { 
+    userRegistrationData.type = 'Unprocessed'; 
+    showSection('unprocessed-options-section'); 
+});
+document.querySelectorAll('.final-choice').forEach(card => { 
+    card.addEventListener('click', () => { 
+        const previousSectionId = card.closest('.page-section').id;
+        backToCategoryBtn.setAttribute('data-target', previousSectionId);
+
+        const category = card.getAttribute('data-category'); 
+        userRegistrationData.category = category; 
+        document.getElementById('register-info').textContent = `Registering as: ${userRegistrationData.role} - ${category}`;
+
+        const entityLabel = document.getElementById('entity-name-label'); 
+        const entityInput = document.getElementById('entity-name-input'); 
+
+        const placeholderMap = {
+            'Restaurant': 'e.g., The Grand Palace Hotel',
+            'Event': 'e.g., City Wedding Function',
+            'Bakeries': 'e.g., Fresh Bakes Bakery',
+            'Juice Shops': 'e.g., Healthy Juice Center',
+            'Hostels': 'e.g., Sunrise Youth Hostel',
+            'Canteen': 'e.g., Corporate Park Canteen',
+            'Temples': 'e.g., Main Street Temple',
+            'Mosques': 'e.g., Central Mosque',
+            'Churches': 'e.g., St. Paul\'s Church',
+            'default': 'e.g., John Doe'
+        };
+
+        const labelMap = {
+            'Restaurant': 'Restaurant / Hotel Name',
+            'Event': 'Event / Function Name',
+            'Bakeries': 'Bakery Name',
+            'Juice Shops': 'Juice Shop Name',
+            'Hostels': 'Hostel Name',
+            'Canteen': 'Canteen Name',
+            'Temples': 'Temple Name',
+            'Mosques': 'Mosque / Masjid Name',
+            'Churches': 'Church Name',
+            'default': 'Full Name / Household Name'
+        };
+
+        entityLabel.textContent = labelMap[category] || labelMap['default'];
+        entityInput.placeholder = placeholderMap[category] || placeholderMap['default'];
+
+        if (processedIndustriesNeedingVerification.includes(category)) { 
+            entityLabel.textContent = 'Company / Industry Name'; 
+            entityInput.placeholder = 'e.g., EcoBiofuels Company'; 
+        }
+
+        showSection('register-section'); 
+    }); 
+});
+
+        function togglePasswordVisibility(passwordInput, eyeIcon, eyeOffIcon) { 
+            if (passwordInput.type === 'password') { 
+                passwordInput.type = 'text'; 
+                eyeIcon.classList.add('hidden'); 
+                eyeOffIcon.classList.remove('hidden'); 
+            } else { 
+                passwordInput.type = 'password'; 
+                eyeIcon.classList.remove('hidden'); 
+                eyeOffIcon.classList.add('hidden'); 
+            } 
+        }
+
+        document.getElementById('toggle-login-password').addEventListener('click', () => { 
+            togglePasswordVisibility(
+                document.getElementById('login-password'), 
+                document.getElementById('eye-login'), 
+                document.getElementById('eye-off-login')
+            ); 
+        });
+
+        document.getElementById('toggle-register-password').addEventListener('click', () => { 
+            togglePasswordVisibility(
+                document.getElementById('register-password'), 
+                document.getElementById('eye-register'), 
+                document.getElementById('eye-off-register')
+            ); 
+        });
+
+        showSection('loading-section');
+document.addEventListener('click', function(event) {
+    if (event.target && event.target.dataset.filename) {
+        const fileName = event.target.dataset.filename;
+        const fileType = event.target.dataset.type;
+
+        if (fileType === 'veg') {
+            vegFilesToUpload = vegFilesToUpload.filter(file => file.name !== fileName);
+            const fileNames = vegFilesToUpload.map(f => f.name);
+            lastValidVegFileName = fileNames.join(', ');
+
+            if (vegFilesToUpload.length > 0) {
+                document.getElementById('veg-file-name').innerHTML = fileNames.map(name => `
+                    <li class="flex justify-between items-center py-1">
+                        <span>- ${name}</span>
+                        <button type="button" class="text-red-500 hover:text-red-700 font-bold px-2" data-filename="${name}" data-type="veg">×</button>
+                    </li>
+                `).join('');
+            } else {
+                isVegImageValid = false;
+                document.getElementById('veg-file-name').textContent = '';
+                document.getElementById('veg-image-preview').classList.add('hidden');
+            }
+        } 
+        else if (fileType === 'fruit') {
+            fruitFilesToUpload = fruitFilesToUpload.filter(file => file.name !== fileName);
+            const fileNames = fruitFilesToUpload.map(f => f.name);
+            lastValidFruitFileName = fileNames.join(', ');
+            
+            if (fruitFilesToUpload.length > 0) {
+                 document.getElementById('fruit-file-name').innerHTML = fileNames.map(name => `
+                    <li class="flex justify-between items-center py-1">
+                        <span>- ${name}</span>
+                        <button type="button" class="text-red-500 hover:text-red-700 font-bold px-2" data-filename="${name}" data-type="fruit">×</button>
+                    </li>
+                `).join('');
+            } else {
+                isFruitImageValid = false;
+                document.getElementById('fruit-file-name').textContent = '';
+                document.getElementById('fruit-image-preview').classList.add('hidden');
+            }
+        }
+        
+        validateSellerForm();
+    }
+});
+sellerAddressInput.addEventListener('input', validateSellerForm);
+window.clearProductCard = function(type) {
+    if (type === 'veg') {
+        document.getElementById('veg-description').value = '';
+        
+        document.querySelectorAll('input[name="veg-quality"]').forEach(radio => radio.checked = false);
+        
+        clearImage('veg');
+
+    } else if (type === 'fruit') {
+        document.getElementById('fruit-description').value = '';
+        document.querySelectorAll('input[name="fruit-quality"]').forEach(radio => radio.checked = false);
+        clearImage('fruit');
+    }
+}
+document.querySelectorAll('input[name="veg-quality"], input[name="fruit-quality"]').forEach(radio => {
+    
+    radio.addEventListener('mousedown', function() {
+        this.dataset.wasChecked = this.checked;
+    });
+
+    radio.addEventListener('click', function() {
+        if (this.dataset.wasChecked === 'true') {
+            this.checked = false;
+        }
+    });
+});
+const vegTabBtn = document.getElementById('veg-tab-btn');
+const fruitTabBtn = document.getElementById('fruit-tab-btn');
+const vegProductsWrapper = document.getElementById('veg-products-wrapper');
+const fruitProductsWrapper = document.getElementById('fruit-products-wrapper');
+
+if (vegTabBtn) { 
+    vegTabBtn.addEventListener('click', () => {
+        vegProductsWrapper.classList.remove('hidden');
+        fruitProductsWrapper.classList.add('hidden');
+
+        vegTabBtn.classList.add('border-teal-500', 'text-teal-600');
+        vegTabBtn.classList.remove('border-transparent', 'text-gray-500');
+        fruitTabBtn.classList.add('border-transparent', 'text-gray-500');
+        fruitTabBtn.classList.remove('border-teal-500', 'text-teal-600');
+    });
+
+    fruitTabBtn.addEventListener('click', () => {
+        fruitProductsWrapper.classList.remove('hidden');
+        vegProductsWrapper.classList.add('hidden');
+
+        fruitTabBtn.classList.add('border-teal-500', 'text-teal-600');
+        fruitTabBtn.classList.remove('border-transparent', 'text-gray-500');
+        vegTabBtn.classList.add('border-transparent', 'text-gray-500');
+        vegTabBtn.classList.remove('border-teal-500', 'text-teal-600');
+    });
+}async function populateMainProfileDropdown(currentProfile) {
+    const user = auth.currentUser;
+    if (!user) return;
+
+    const menuEl = document.getElementById('main-profile-dropdown-menu');
+
+    document.getElementById('main-profile-initials').textContent = currentProfile.profileName.substring(0, 2).toUpperCase();
+    document.getElementById('main-profile-name').textContent = currentProfile.profileName;
+
+    const profilesRef = collection(db, "users", user.uid, "profiles");
+    const profileSnapshot = await getDocs(profilesRef);
+    let profileLinks = '';
+    profileSnapshot.forEach(doc => {
+        const profile = { id: doc.id, ...doc.data() };
+        if (profile.id !== currentProfile.id) { 
+             profileLinks += `<a href="#" class="profile-switch-item text-gray-700 block px-4 py-2 text-sm hover:bg-gray-100" data-profile='${JSON.stringify(profile)}'><p class="font-semibold">${profile.profileName}</p></a>`;
+        }
+    });
+
+    menuEl.innerHTML = `
+        <div class="py-1">
+            <p class="px-4 pt-2 pb-1 text-sm font-semibold text-gray-600">Switch Profile</p>
+            <div class="max-h-40 overflow-y-auto">${profileLinks || '<p class="px-4 text-sm text-gray-400">No other profiles</p>'}</div>
+        </div>
+        <div class="border-t py-1">
+            <a href="#" id="main-profile-logout-btn" class="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 font-semibold">Logout Current Profile</a>
+        </div>
+    `;
+}
+
+const menuButton = document.getElementById('main-profile-menu-button');
+const menuEl = document.getElementById('main-profile-dropdown-menu');
+menuButton.addEventListener('click', (e) => {
+    e.stopPropagation();
+    menuEl.classList.toggle('hidden');
+});
+window.addEventListener('click', (e) => {
+    if (!menuButton.contains(e.target)) {
+        menuEl.classList.add('hidden');
+    }
+});
+
+document.addEventListener('click', (e) => {
+    const target = e.target;
+    const profileSwitchItem = target.closest('.profile-switch-item');
+
+    if (profileSwitchItem) {
+        e.preventDefault();
+        const profile = JSON.parse(profileSwitchItem.dataset.profile);
+        if (profile.role === 'Seller') showSellerProducts(profile);
+        else if (profile.role === 'Buyer') showBuyerProducts(profile);
+        menuEl.classList.add('hidden');
+    }
+    
+    if (target.id === 'show-seller-history-link') {
+        e.preventDefault();
+        showSellerHistory();
+        menuEl.classList.add('hidden');
+    }
+    if (target.id === 'show-buyer-history-link') {
+        e.preventDefault();
+        showBuyerHistory();
+        menuEl.classList.add('hidden');
+    }
+
+    if (target.id === 'main-profile-logout-btn') {
+        e.preventDefault();
+        if(auth.currentUser) displayProfileDashboard(auth.currentUser);
+        menuEl.classList.add('hidden');
+    }
+});
+function showSellerProducts(profile) {
+    currentSellerProfile = profile;
+    currentBuyerProfile = null;
+    activeProfile = profile;
+
+    const vegRewardPreview = document.getElementById('veg-reward-preview');
+    const vegRewardImage = document.getElementById('veg-reward-image');
+    const vegRewardText = document.getElementById('veg-reward-text');
+
+    const fruitRewardPreview = document.getElementById('fruit-reward-preview');
+    const fruitRewardImage = document.getElementById('fruit-reward-image');
+    const fruitRewardText = document.getElementById('fruit-reward-text');
+
+    const binUsers = ['Restaurant', 'Event', 'Bakeries', 'Juice Shops', 'Hostels', 'Canteen', 'Temples', 'Mosques', 'Churches'];
+
+   if (profile.category === 'Household') {
+        vegRewardImage.src = 'media/caddy.jpg';
+        vegRewardText.textContent = 'Free 1kg "Solo Caddy"';
+        vegRewardPreview.style.display = 'block';
+
+        fruitRewardImage.src = 'media/caddy.jpg';
+        fruitRewardText.textContent = 'Free 1kg "Solo Caddy"';
+        fruitRewardPreview.style.display = 'block';
+
+    } else if (binUsers.includes(profile.category)) {
+        vegRewardImage.src = 'media/5kgbin.jpg';
+        vegRewardText.textContent = 'Free 5kg/10kg "Utility Bin"';
+        vegRewardPreview.style.display = 'block';
+
+        fruitRewardImage.src = 'media/5kgbin.jpg';
+        fruitRewardText.textContent = 'Free 5kg/10kg "Utility Bin"';
+        fruitRewardPreview.style.display = 'block';
+
+    } else {
+        vegRewardPreview.style.display = 'none';
+        fruitRewardPreview.style.display = 'none';
+    }
+
+    document.getElementById('user-info-display').classList.add('user-info-display-clickable');
+    document.body.style.padding = '0';
+    document.querySelector('.container').style.maxWidth = '100%';
+    showSection('seller-products-section');
+    populateMainProfileDropdown(profile);
+    fetchPendingSubmissions(profile);
+    document.getElementById('rewards-btn').style.display = 'flex';
+
+    const user = auth.currentUser;
+    document.getElementById('history-btn').textContent = 'Your Products';
+    document.getElementById('user-info-name').textContent = profile.profileName;
+    document.getElementById('user-info-email').textContent = user ? user.email : '';
+}
+function showBuyerProducts(profile) {
+    currentBuyerProfile = profile;
+    currentSellerProfile = null;
+    activeProfile = profile;
+    document.getElementById('user-info-display').classList.add('user-info-display-clickable');
+    document.body.style.padding = '0';
+    document.querySelector('.container').style.maxWidth = '100%';
+    populateMainProfileDropdown(profile);
+    document.getElementById('rewards-btn').style.display = 'none';
+
+    const user = auth.currentUser;
+    document.getElementById('history-btn').textContent = 'Your Orders';
+    document.getElementById('user-info-name').textContent = profile.profileName;
+    document.getElementById('user-info-email').textContent = user ? user.email : '';
+
+    if (profile.type === 'Processed') {
+        showSection('buyer-processed-products-section');
+        renderProducts();
+        updateCheckout();
+    } else if (profile.type === 'Unprocessed') {
+        showSection('buyer-unprocessed-products-section');
+    }
+}async function showSellerHistory() {
+        showSection('seller-history-section');
+        const container = document.getElementById('seller-history-container');
+        container.innerHTML = '<div class="spinner mx-auto"></div><p class="text-center mt-4">Loading your product history...</p>';
+
+        if (!currentSellerProfile || !currentSellerProfile.id) {
+            container.innerHTML = '<p class="text-center text-red-500">Could not identify seller profile. Please go back to the dashboard.</p>';
+            return;
+        }
+
+        try {
+            const submissionsRef = collection(db, "productSubmissions");
+            const q = query(submissionsRef, where("profileId", "==", currentSellerProfile.id));
+            const querySnapshot = await getDocs(q);
+
+            if (querySnapshot.empty) {
+                container.innerHTML = '<p class="text-center text-gray-500">You have not submitted any products with this profile yet.</p>';
+                return;
+            }
+
+            let historyHtml = '';
+            querySnapshot.forEach(doc => {
+                const submission = doc.data();
+                
+                const date = new Date(submission.submittedAt).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' });
+
+                const statusInfo = {
+                    pending: { text: 'Pending', color: 'bg-yellow-100 text-yellow-800' },
+                    approved: { text: 'Approved', color: 'bg-green-100 text-green-800' },
+                    rejected: { text: 'Rejected', color: 'bg-red-100 text-red-800' }
+                };
+                const currentStatus = statusInfo[submission.status] || { text: 'Unknown', color: 'bg-gray-100 text-gray-800' };
+
+                let vegImagesHtml = '';
+                if (submission.vegetableImageURLs && submission.vegetableImageURLs.length > 0) {
+                    vegImagesHtml = submission.vegetableImageURLs.map(url => `<img src="${url}" class="w-24 h-24 rounded-lg object-cover">`).join('');
+                }
+
+                let fruitImagesHtml = '';
+                if (submission.fruitImageURLs && submission.fruitImageURLs.length > 0) {
+                    fruitImagesHtml = submission.fruitImageURLs.map(url => `<img src="${url}" class="w-24 h-24 rounded-lg object-cover">`).join('');
+                }
+                
+                historyHtml += `
+                    <div class="bg-white p-6 rounded-xl shadow-md border border-gray-200 space-y-4">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="font-semibold text-gray-500">Submitted on: ${date}</p>
+                                <p class="text-sm text-gray-400">Status:</p>
+                            </div>
+                            <span class="capitalize text-sm font-semibold px-3 py-1 rounded-full ${currentStatus.color}">${currentStatus.text}</span>
+                        </div>
+                        
+                        ${submission.vegetableDescription ? `
+                        <div class="border-t pt-4">
+                            <p class="font-bold text-lg text-gray-800">Vegetable Peels</p>
+                            <p class="text-gray-600 my-2">${submission.vegetableDescription}</p>
+                            <p class="text-sm"><strong>Quality:</strong> ${submission.vegetableQuality || 'N/A'}</p>
+                            <div class="flex space-x-2 mt-2">${vegImagesHtml}</div>
+                        </div>` : ''}
+
+                        ${submission.fruitDescription ? `
+                        <div class="border-t pt-4">
+                            <p class="font-bold text-lg text-gray-800">Fruit Peels</p>
+                            <p class="text-gray-600 my-2">${submission.fruitDescription}</p>
+                            <p class="text-sm"><strong>Quality:</strong> ${submission.fruitQuality || 'N/A'}</p>
+                            <div class="flex space-x-2 mt-2">${fruitImagesHtml}</div>
+                        </div>` : ''}
+
+                        ${submission.status === 'approved' ? `
+                        <div class="bg-green-50 p-3 rounded-lg text-center">
+                            <p class="font-semibold text-green-700">Points Awarded: ${submission.points || '0'}</p>
+                        </div>` : ''}
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = historyHtml;
+
+        } catch (error) {
+            console.error("Error fetching product history:", error);
+            container.innerHTML = '<p class="text-center text-red-500">An error occurred while fetching your history. Please try again.</p>';
+        }
+    }
+async function showBuyerHistory() {
+    showSection('buyer-history-section');
+    const container = document.getElementById('buyer-history-container');
+    container.innerHTML = '<div class="spinner mx-auto"></div><p class="text-center mt-4">Loading your order history...</p>';
+
+    if (!currentBuyerProfile || !currentBuyerProfile.id || !auth.currentUser) {
+        container.innerHTML = '<p class="text-center text-red-500">Could not identify buyer profile or user.</p>';
+        return;
+    }
+
+    try {
+        const ordersRef = collection(db, "orders");
+        const q = query(ordersRef, where("userId", "==", auth.currentUser.uid));
+        const querySnapshot = await getDocs(q);
+
+        if (querySnapshot.empty) {
+            container.innerHTML = '<p class="text-center text-gray-500">You have not placed any orders with this profile yet.</p>';
+            return;
+        }
+
+        let historyHtml = '';
+        let ordersForThisProfile = 0;
+        
+        querySnapshot.forEach(doc => {
+            const order = doc.data();
+            if (order.profileId === currentBuyerProfile.id) {
+                ordersForThisProfile++;
+                const date = new Date(order.orderDate).toLocaleString('en-IN', { dateStyle: 'long', timeStyle: 'short' });
+                
+                const itemsListHtml = order.items.map(item => `
+                    <li class="flex justify-between text-sm">
+                        <span>${item.name} (${item.quantity} kg)</span>
+                        <span class="font-medium">₹${item.total.toFixed(2)}</span>
+                    </li>
+                `).join('');
+
+                historyHtml += `
+                    <div class="bg-white p-6 rounded-xl shadow-md border border-gray-200 space-y-4">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="font-bold text-lg text-gray-800">Order Placed</p>
+                                <p class="text-sm text-gray-500">${date}</p>
+                            </div>
+                            <span class="capitalize text-sm font-semibold px-3 py-1 rounded-full bg-blue-100 text-blue-800">${order.status}</span>
+                        </div>
+                        <div class="border-t pt-4">
+                            <p class="font-semibold mb-2">Items:</p>
+                            <ul class="space-y-1 list-disc list-inside text-gray-600">
+                                ${itemsListHtml}
+                            </ul>
+                        </div>
+                        <div class="border-t pt-4 text-right">
+                            <p class="font-bold text-xl">Total: ₹${order.grandTotal.toFixed(2)}</p>
+                        </div>
+                        <div class="border-t pt-4">
+                            <p class="font-semibold mb-1">Delivery Address:</p>
+                            <p class="text-gray-600 text-sm whitespace-pre-line">${order.deliveryAddress}</p>
+                        </div>
+                    </div>
+                `;
+            }
+        });
+
+        if (ordersForThisProfile === 0) {
+             container.innerHTML = '<p class="text-center text-gray-500">You have not placed any orders with this profile yet.</p>';
+        } else {
+            container.innerHTML = historyHtml;
+        }
+
+    } catch (error) {
+        console.error("Error fetching order history:", error);
+        container.innerHTML = '<p class="text-center text-red-500">An error occurred while fetching your history.</p>';
+    }
+}
+function filterProductList(inputElement, containerElement) {
+    const searchTerm = inputElement.value.toLowerCase();
+    const productCards = containerElement.querySelectorAll('.product-card-buyer');
+    
+    productCards.forEach(card => {
+        const productName = card.dataset.productNameFilter || '';
+        if (productName.includes(searchTerm)) {
+            card.style.display = 'flex';
+        } else {
+            card.style.display = 'none';
+        }
+    });
+}
+
+const vegSearchInput = document.getElementById('veg-product-search');
+if (vegSearchInput) {
+    const vegContainer = document.getElementById('veg-powders-container');
+    vegSearchInput.addEventListener('input', () => filterProductList(vegSearchInput, vegContainer));
+}
+
+const fruitSearchInput = document.getElementById('fruit-product-search');
+if (fruitSearchInput) {
+    const fruitContainer = document.getElementById('fruit-powders-container');
+    fruitSearchInput.addEventListener('input', () => filterProductList(fruitSearchInput, fruitContainer));
+}
+
+async function loadSubmissionForEdit(submissionId) {
+    imagesToRemove = [];
+    document.getElementById('edit-veg-image-upload').value = '';
+    document.getElementById('edit-fruit-image-upload').value = '';
+
+    const submissionRef = doc(db, "productSubmissions", submissionId);
+    const docSnap = await getDoc(submissionRef);
+
+    if (!docSnap.exists()) {
+        alert("Error: Submission not found.");
+        window.location.hash = '#';
+        return;
+    }
+
+    currentEditData = { id: docSnap.id, ...docSnap.data() };
+
+    document.getElementById('edit-veg-description').value = currentEditData.vegetableDescription || '';
+    document.getElementById('edit-fruit-description').value = currentEditData.fruitDescription || '';
+
+    if (currentEditData.vegetableQuality) {
+        document.querySelector(`input[name="edit-veg-quality"][value="${currentEditData.vegetableQuality}"]`).checked = true;
+    }
+    if (currentEditData.fruitQuality) {
+        document.querySelector(`input[name="edit-fruit-quality"][value="${currentEditData.fruitQuality}"]`).checked = true;
+    }
+
+    const vegImagesContainer = document.getElementById('edit-veg-images-preview');
+    const fruitImagesContainer = document.getElementById('edit-fruit-images-preview');
+    vegImagesContainer.innerHTML = '<p class="text-xs text-gray-400">No current images.</p>';
+    fruitImagesContainer.innerHTML = '<p class="text-xs text-gray-400">No current images.</p>';
+
+    if (currentEditData.vegetableImageURLs?.length) {
+        vegImagesContainer.innerHTML = currentEditData.vegetableImageURLs.map(url => `
+            <div class="relative">
+                <img src="${url}" class="w-24 h-24 rounded-lg object-cover border">
+                <button data-url-to-remove="${url}" class="remove-image-btn absolute top-0 right-0 bg-red-600 text-white rounded-full h-6 w-6 flex items-center justify-center text-xs font-bold">&times;</button>
+            </div>
+        `).join('');
+    }
+    if (currentEditData.fruitImageURLs?.length) {
+        fruitImagesContainer.innerHTML = currentEditData.fruitImageURLs.map(url => `
+            <div class="relative">
+                <img src="${url}" class="w-24 h-24 rounded-lg object-cover border">
+                <button data-url-to-remove="${url}" class="remove-image-btn absolute top-0 right-0 bg-red-600 text-white rounded-full h-6 w-6 flex items-center justify-center text-xs font-bold">&times;</button>
+            </div>
+        `).join('');
+    }
+}
+
+function handleHashChange() {
+    const hash = window.location.hash;
+    if (hash.startsWith('#edit?id=')) {
+        const submissionId = hash.split('=')[1];
+        if (submissionId) {
+            loadSubmissionForEdit(submissionId);
+            showSection('edit-submission-section');
+        }
+    } else {
+        if (currentSellerProfile) {
+            showSection('seller-products-section');
+        }
+    }
+}
+window.addEventListener('hashchange', handleHashChange);
+document.getElementById('back-to-seller-dashboard').addEventListener('click', (e) => {
+    e.preventDefault();
+    window.location.hash = '#';
+});
+
+document.getElementById('edit-submission-section').addEventListener('click', (e) => {
+    if (e.target.classList.contains('remove-image-btn')) {
+        const url = e.target.dataset.urlToRemove;
+        imagesToRemove.push(url);
+        e.target.parentElement.style.display = 'none';
+    }
+});
+
+document.getElementById('save-submission-changes-btn').addEventListener('click', async (e) => {
+    const btn = e.target;
+    btn.disabled = true;
+    btn.textContent = 'Saving...';
+    
+    try {
+        const user = auth.currentUser;
+        let newVegImageUrls = [];
+        let newFruitImageUrls = [];
+
+      for (const file of filesToUploadVeg) {
+            const base64Str = await compressAndConvertToBase64(file);
+            newVegImageUrls.push(base64Str);
+        }
+        for (const file of filesToUploadFruit) {
+            const base64Str = await compressAndConvertToBase64(file);
+            newFruitImageUrls.push(base64Str);
+        }
+
+        const finalVegUrls = (currentEditData.vegetableImageURLs || []).filter(url => !imagesToRemove.includes(url)).concat(newVegImageUrls);
+        const finalFruitUrls = (currentEditData.fruitImageURLs || []).filter(url => !imagesToRemove.includes(url)).concat(newFruitImageUrls);
+
+        const submissionRef = doc(db, "productSubmissions", currentEditData.id);
+        const updatedData = {
+            vegetableDescription: document.getElementById('edit-veg-description').value,
+            fruitDescription: document.getElementById('edit-fruit-description').value,
+            vegetableQuality: document.querySelector('input[name="edit-veg-quality"]:checked')?.value || null,
+            fruitQuality: document.querySelector('input[name="edit-fruit-quality"]:checked')?.value || null,
+            vegetableImageURLs: finalVegUrls,
+            fruitImageURLs: finalFruitUrls
+        };
+
+        await updateDoc(submissionRef, updatedData);
+        alert('✅ Submission updated successfully!');
+        window.location.hash = '#';
+
+    } catch (error) {
+        console.error("Error saving changes: ", error);
+        alert("An error occurred while saving. Please check the console.");
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'Save Changes';
+    }
+});
+
+function isValidImage(file) {
+    const validTypes = ['image/png', 'image/jpeg', 'image/gif', 'image/bmp', 'image/webp'];
+    const maxSize = 3 * 1024 * 1024; 
+
+    if (!validTypes.includes(file.type)) {
+        alert(`Error: '${file.name}' has an unsupported file type.`);
+        return false;
+    }
+    if (file.size > maxSize) {
+        alert(`Error: '${file.name}' is too large. Please resize it under 1MB to save space.`);
+        return false;
+    }
+    return true;
+}
+vegImageUpload.addEventListener('change', async (event) => {
+    const newFiles = Array.from(event.target.files);
+    const vegImagePreviewDiv = document.getElementById('veg-image-preview');
+
+    if (newFiles.length === 0) { return; }
+
+    for (const file of newFiles) {
+        if (!isValidImage(file)) { continue; }
+        
+        const prediction = await predictImageViaBackend(file);
+        let isContentValid = false;
+        
+        if (prediction && prediction.class_name === 'vegetable_peel' && prediction.confidence > 0.50) {
+            isContentValid = true;
+        }
+
+        if (isContentValid) {
+            if (!vegFilesToUpload.some(f => f.name === file.name)) {
+                vegFilesToUpload.push(file);
+            }
+        } else {
+            const label = prediction ? prediction.class_name : 'Unknown';
+            alert(`The image '${file.name}' was rejected. The AI classified it as: ${label.replace('_', ' ')}.`);
+        }
+    }
+
+    renderVegFileList();
+    validateSellerForm();
+});
+function renderVegFileList() {
+    const vegImagePreviewDiv = document.getElementById('veg-image-preview');
+    
+    vegImagePreviewDiv.innerHTML = '';
+
+    if (vegFilesToUpload.length === 0) {
+        isVegImageValid = false;
+        vegImagePreviewDiv.classList.add('hidden');
+        return;
+    }
+
+    isVegImageValid = true;
+    vegImagePreviewDiv.classList.remove('hidden');
+
+    const listContainer = document.createElement('div');
+    listContainer.className = 'flex flex-wrap gap-2 p-2 bg-gray-50 border rounded-md';
+
+    vegFilesToUpload.forEach((file, index) => {
+        const itemPill = document.createElement('div');
+        itemPill.className = 'flex items-center gap-2 bg-white px-3 py-1 border rounded-full text-sm shadow-sm';
+        
+        const nameSpan = document.createElement('span');
+        nameSpan.className = 'text-gray-700 truncate max-w-[150px]';
+        nameSpan.textContent = file.name;
+
+        const removeBtn = document.createElement('button');
+        removeBtn.type = 'button';
+        removeBtn.className = 'text-red-500 hover:text-red-700 font-bold ml-1 focus:outline-none';
+        removeBtn.textContent = '×';
+        
+        removeBtn.addEventListener('click', () => {
+            vegFilesToUpload.splice(index, 1);
+            renderVegFileList();
+            validateSellerForm();
+        });
+
+        itemPill.appendChild(nameSpan);
+        itemPill.appendChild(removeBtn);
+        listContainer.appendChild(itemPill);
+    });
+
+    vegImagePreviewDiv.appendChild(listContainer);
+}
+fruitImageUpload.addEventListener('change', async (event) => {
+    const newFiles = Array.from(event.target.files);
+    const fruitImagePreviewDiv = document.getElementById('fruit-image-preview');
+
+    if (newFiles.length === 0) { return; }
+    
+    for (const file of newFiles) {
+        if (!isValidImage(file)) { continue; }
+        
+        const prediction = await predictImageViaBackend(file);
+        let isContentValid = false;
+        
+        if (prediction && prediction.class_name === 'fruit_peel' && prediction.confidence > 0.50) {
+            isContentValid = true;
+        }
+
+        if (isContentValid) {
+            if (!fruitFilesToUpload.some(f => f.name === file.name)) {
+                fruitFilesToUpload.push(file);
+            }
+        } else {
+            const label = prediction ? prediction.class_name : 'Unknown';
+            alert(`The image '${file.name}' was rejected. The AI classified it as: ${label.replace('_', ' ')}.`);
+        }
+    }
+
+    renderFruitFileList();
+    validateSellerForm();
+});
+function renderFruitFileList() {
+    const fruitImagePreviewDiv = document.getElementById('fruit-image-preview');
+    
+    fruitImagePreviewDiv.innerHTML = '';
+
+    if (fruitFilesToUpload.length === 0) {
+        isFruitImageValid = false;
+        fruitImagePreviewDiv.classList.add('hidden');
+        return;
+    }
+
+    isFruitImageValid = true;
+    fruitImagePreviewDiv.classList.remove('hidden');
+
+    const listContainer = document.createElement('div');
+    listContainer.className = 'flex flex-wrap gap-2 p-2 bg-gray-50 border rounded-md';
+
+    fruitFilesToUpload.forEach((file, index) => {
+        const itemPill = document.createElement('div');
+        itemPill.className = 'flex items-center gap-2 bg-white px-3 py-1 border rounded-full text-sm shadow-sm';
+        
+        const nameSpan = document.createElement('span');
+        nameSpan.className = 'text-gray-700 truncate max-w-[150px]';
+        nameSpan.textContent = file.name;
+
+        const removeBtn = document.createElement('button');
+        removeBtn.type = 'button';
+        removeBtn.className = 'text-red-500 hover:text-red-700 font-bold ml-1 focus:outline-none';
+        removeBtn.textContent = '×';
+        
+        removeBtn.addEventListener('click', () => {
+            fruitFilesToUpload.splice(index, 1);
+            renderFruitFileList();
+            validateSellerForm();
+        });
+
+        itemPill.appendChild(nameSpan);
+        itemPill.appendChild(removeBtn);
+        listContainer.appendChild(itemPill);
+    });
+
+    fruitImagePreviewDiv.appendChild(listContainer);
+}
+async function createInstantPreview(inputElement, previewContainer, fileListArray, imageType) {
+    previewContainer.querySelectorAll('.is-new-preview').forEach(el => el.remove());
+    fileListArray.length = 0;
+
+    const files = Array.from(inputElement.files);
+    if (files.length === 0) return;
+
+    for (const file of files) {
+        if (!isValidImage(file)) { continue; }
+        
+        const prediction = await predictImageViaBackend(file);
+
+        let isContentValid = false;
+        const expectedClass = imageType === 'veg' ? 'vegetable_peel' : 'fruit_peel';
+        
+        if (prediction && prediction.class_name === expectedClass && prediction.confidence > 0.85) {
+            isContentValid = true;
+        }
+
+        if (!isContentValid) {
+            alert(`Warning: The image '${file.name}' does not appear to be a valid ${expectedClass.replace('_', ' ')} image and was ignored.`);
+            continue;
+        }
+
+        fileListArray.push(file);
+
+        const reader = new FileReader();
+        reader.onload = function(event) {
+            const previewWrapper = document.createElement('div');
+            previewWrapper.className = 'relative border-2 border-blue-400 p-1 rounded-lg is-new-preview';
+            const img = document.createElement('img');
+            img.src = event.target.result;
+            img.className = 'w-24 h-24 rounded-md object-cover';
+            const newLabel = document.createElement('span');
+            newLabel.className = 'absolute bottom-1 right-1 bg-blue-500 text-white text-xs font-bold px-1.5 py-0.5 rounded';
+            newLabel.textContent = 'New';
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'absolute top-0 right-0 bg-red-600 text-white rounded-full h-6 w-6 flex items-center justify-center text-xs font-bold remove-new-image-btn';
+            deleteBtn.textContent = '×';
+            deleteBtn.setAttribute('data-file-name', file.name);
+            previewWrapper.appendChild(img);
+            previewWrapper.appendChild(newLabel);
+            previewWrapper.appendChild(deleteBtn);
+            previewContainer.appendChild(previewWrapper);
+            const placeholder = previewContainer.querySelector('p');
+            if (placeholder) placeholder.style.display = 'none';
+        };
+        reader.readAsDataURL(file);
+    }
+    inputElement.value = '';
+}
+
+document.getElementById('edit-veg-image-upload').addEventListener('change', function() {
+    const previewContainer = document.getElementById('edit-veg-images-preview');
+    createInstantPreview(this, previewContainer, filesToUploadVeg, 'veg');
+});
+
+document.getElementById('edit-fruit-image-upload').addEventListener('change', function() {
+    const previewContainer = document.getElementById('edit-fruit-images-preview');
+    createInstantPreview(this, previewContainer, filesToUploadFruit, 'fruit');
+});
+
+document.getElementById('edit-submission-section').addEventListener('click', (e) => {
+    if (e.target.classList.contains('remove-new-image-btn')) {
+        const fileNameToRemove = e.target.dataset.fileName;
+        const parentPreview = e.target.closest('.is-new-preview');
+
+        if (parentPreview && parentPreview.closest('#edit-veg-images-preview')) {
+            filesToUploadVeg = filesToUploadVeg.filter(file => file.name !== fileNameToRemove);
+        } else if (parentPreview && parentPreview.closest('#edit-fruit-images-preview')) {
+            filesToUploadFruit = filesToUploadFruit.filter(file => file.name !== fileNameToRemove);
+        }
+
+        if (parentPreview) {
+            parentPreview.remove();
+        }
+
+        const previewContainer = e.target.closest('.flex');
+        if (previewContainer && !previewContainer.querySelector('img') && !previewContainer.querySelector('p')) {
+            previewContainer.innerHTML = '<p class="text-xs text-gray-400">No current images.</p>';
+        }
+    }
+});
+document.getElementById('back-to-seller-products').addEventListener('click', (e) => {
+    e.preventDefault();
+    if(currentSellerProfile) showSellerProducts(currentSellerProfile);
+});
+
+document.getElementById('back-to-buyer-products').addEventListener('click', (e) => {
+    e.preventDefault();
+    if(currentBuyerProfile) showBuyerProducts(currentBuyerProfile);
+});
+document.getElementById('user-info-display').addEventListener('click', () => {
+    if (activeProfile) {
+        document.getElementById('edit-profile-name').value = activeProfile.profileName;
+        document.getElementById('edit-profile-email').value = auth.currentUser.email;
+        document.getElementById('edit-profile-message').textContent = '';
+        showSection('edit-profile-section');
+    }
+});
+
+document.getElementById('back-from-edit-profile').addEventListener('click', (e) => {
+    e.preventDefault();
+    if (activeProfile) {
+        if (activeProfile.role === 'Seller') {
+            showSellerProducts(activeProfile);
+        } else {
+            showBuyerProducts(activeProfile);
+        }
+    }
+});
+
+document.getElementById('edit-profile-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const newName = document.getElementById('edit-profile-name').value.trim();
+    const newEmail = document.getElementById('edit-profile-email').value.trim();
+    const messageEl = document.getElementById('edit-profile-message');
+    const saveBtn = document.getElementById('save-profile-changes-btn');
+
+    messageEl.textContent = ''; 
+    messageEl.classList.remove('text-red-500', 'text-green-600');
+
+    if (!newName || !newEmail) {
+        messageEl.textContent = 'Profile name and email cannot be empty.';
+        messageEl.classList.add('text-red-500');
+        return;
+    }
+    if (!activeProfile || !auth.currentUser) return;
+    
+    const user = auth.currentUser;
+    const currentEmail = user.email;
+
+    saveBtn.disabled = true;
+    saveBtn.textContent = 'Saving...';
+
+    try {
+        if (newEmail !== currentEmail) {
+            try {
+                await updateEmail(user, newEmail);
+                document.getElementById('user-info-email').textContent = newEmail;
+            } catch (error) {
+                console.error("Email update error: ", error);
+                if (error.code === 'auth/requires-recent-login') {
+                    throw new Error('For security, please log out and log back in to change your email.');
+                } else if (error.code === 'auth/email-already-in-use') {
+                    throw new Error('This email address is already in use by another account.');
+                } else {
+                    throw new Error('Could not update email address.');
+                }
+            }
+        }
+
+        if (newName !== activeProfile.profileName) {
+            const profileRef = doc(db, "users", user.uid, "profiles", activeProfile.id);
+            await updateDoc(profileRef, { profileName: newName });
+
+            activeProfile.profileName = newName;
+            document.getElementById('main-profile-name').textContent = newName;
+            document.getElementById('user-info-name').textContent = newName;
+            document.getElementById('main-profile-initials').textContent = newName.substring(0, 2).toUpperCase();
+        }
+
+        messageEl.textContent = 'Profile updated successfully!';
+        messageEl.classList.add('text-green-600');
+        
+        setTimeout(() => {
+             if (activeProfile.role === 'Seller') {
+                showSellerProducts(activeProfile);
+            } else {
+                showBuyerProducts(activeProfile);
+            }
+        }, 1500);
+
+    } catch (error) { 
+        messageEl.textContent = error.message;
+        messageEl.classList.add('text-red-500');
+    } finally {
+        saveBtn.disabled = false;
+        saveBtn.textContent = 'Save Changes';
+    }
+});
+    </script>
+</body>
+</html>
