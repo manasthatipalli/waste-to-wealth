@@ -10,7 +10,7 @@ app = Flask(__name__)
 CORS(app)
 
 MODEL_PATH = "waste_sorting_model.keras"
-model = tf.keras.models.load_model(MODEL_PATH)
+# We removed the global model load here to prevent startup memory spikes
 
 CLASS_NAMES = {
     0: "fruit_peel",
@@ -19,19 +19,21 @@ CLASS_NAMES = {
 }
 CONFIDENCE_THRESHOLD = 0.50
 
-
 def preprocess_image(image_bytes):
     img = Image.open(io.BytesIO(image_bytes)).convert("RGB")
     img = img.resize((224, 224))
-
     img_array = np.array(img).astype("float32")
     img_array = np.expand_dims(img_array, axis=0)
-
     return img_array
-
 
 @app.route("/predict", methods=["POST"])
 def predict():
+    # Lazy Loading: Load the model only when a request arrives
+    # 'global' allows us to reuse the loaded model for subsequent requests
+    global model
+    if 'model' not in globals():
+        model = tf.keras.models.load_model(MODEL_PATH)
+
     requested_type = request.form.get("type") 
 
     if "image" not in request.files:
@@ -70,11 +72,9 @@ def predict():
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
 
-
 @app.route("/")
 def home():
     return "Waste Sorting API Running"
-
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
