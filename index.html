@@ -242,7 +242,7 @@
                     </div>
                     <div class="mb-6">
                         <label for="veg-image-upload" class="block text-sm font-medium text-gray-700 mb-2">Upload Image of Peels</label>
-                        <input type="file" id="veg-image-upload" multiple  accept="image/*" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100">
+                      <input type="file" id="veg-image-upload" multiple accept="image/*" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100">
                         <div id="veg-image-preview" class="mt-4 hidden relative flex items-center space-x-3 bg-gray-100 p-2 rounded-lg">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-green-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                             <button type="button" class="text-gray-400 hover:text-gray-600 focus:outline-none" onclick="clearImage('veg')"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" /></svg></button>
@@ -292,7 +292,7 @@
                     </div>
                     <div class="mb-6">
                         <label for="fruit-image-upload" class="block text-sm font-medium text-gray-700 mb-2">Upload Image of Peels</label>
-                        <input type="file" id="fruit-image-upload" multiple  accept="image/*" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100">
+                       <input type="file" id="fruit-image-upload" multiple accept="image/*" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100">
                         <div id="fruit-image-preview" class="mt-4 hidden relative flex items-center space-x-3 bg-gray-100 p-2 rounded-lg">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-green-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                             <button type="button" class="text-gray-400 hover:text-gray-600 focus:outline-none" onclick="clearImage('fruit')"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" /></svg></button>
@@ -778,25 +778,30 @@ let isVegImageValid = true;
         const vegImageUpload = document.getElementById("veg-image-upload");
         const fruitImageUpload = document.getElementById("fruit-image-upload");
 
-        async function predictImageViaBackend(imageFile) {
-            const formData = new FormData();
-            formData.append("image", imageFile);
-            try {
-                const response = await fetch("http://127.0.0.1:5000/predict", {
-                    method: "POST",
-                    body: formData
-                });
-                if (!response.ok) {
-                    const errData = await response.json();
-                    console.error("Backend error details:", errData.error);
-                    return null;
-                }
-                return await response.json();
-            } catch (error) {
-                console.error("Failed to connect to Python Flask server:", error);
-                return null;
-            }
+       async function predictImageViaBackend(imageFile, type) {
+    const formData = new FormData();
+    formData.append("image", imageFile);
+    formData.append("type", type);
+    
+    try {
+        const response = await fetch("http://127.0.0.1:5000/predict", {
+            method: "POST",
+            body: formData
+        });
+        
+        const data = await response.json();
+        
+        if (!response.ok) {
+            return { success: false, error: data.error || "The image was rejected." };
         }
+        return data;
+    } catch (error) {
+        console.error("Connection error:", error);
+        return { success: false, error: "Connection error: Unable to reach classification server." };
+    }
+}
+           
+        
 
         let userRegistrationData = {};
         let currentSellerProfile = null;
@@ -2464,24 +2469,29 @@ vegImageUpload.addEventListener('change', async (event) => {
 
     if (newFiles.length === 0) { return; }
 
-    for (const file of newFiles) {
-        if (!isValidImage(file)) { continue; }
-        
-        const prediction = await predictImageViaBackend(file);
-        let isContentValid = false;
-        
-        if (prediction && prediction.class_name === 'vegetable_peel' && prediction.confidence > 0.50) {
-            isContentValid = true;
-        }
+    let containsRejected = false;
 
-        if (isContentValid) {
+    for (const file of newFiles) {
+        if (!isValidImage(file)) {
+            containsRejected = true;
+            continue;
+        }
+        
+        const prediction = await predictImageViaBackend(file, 'veg');
+        
+        if (prediction && prediction.success === true && prediction.class_name === 'vegetable_peel') {
             if (!vegFilesToUpload.some(f => f.name === file.name)) {
                 vegFilesToUpload.push(file);
             }
         } else {
-            const label = prediction ? prediction.class_name : 'Unknown';
-            alert(`The image '${file.name}' was rejected. The AI classified it as: ${label.replace('_', ' ')}.`);
+            containsRejected = true;
+            const errorMsg = (prediction && prediction.error) ? prediction.error : "The image was rejected.";
+            alert(`The image '${file.name}' was rejected. Reason: ${errorMsg}`);
         }
+    }
+
+    if (containsRejected) {
+        vegImageUpload.value = '';
     }
 
     renderVegFileList();
@@ -2536,24 +2546,29 @@ fruitImageUpload.addEventListener('change', async (event) => {
 
     if (newFiles.length === 0) { return; }
     
-    for (const file of newFiles) {
-        if (!isValidImage(file)) { continue; }
-        
-        const prediction = await predictImageViaBackend(file);
-        let isContentValid = false;
-        
-        if (prediction && prediction.class_name === 'fruit_peel' && prediction.confidence > 0.50) {
-            isContentValid = true;
-        }
+    let containsRejected = false;
 
-        if (isContentValid) {
+    for (const file of newFiles) {
+        if (!isValidImage(file)) {
+            containsRejected = true;
+            continue;
+        }
+        
+        const prediction = await predictImageViaBackend(file, 'fruit');
+        
+        if (prediction && prediction.success === true && prediction.class_name === 'fruit_peel') {
             if (!fruitFilesToUpload.some(f => f.name === file.name)) {
                 fruitFilesToUpload.push(file);
             }
         } else {
-            const label = prediction ? prediction.class_name : 'Unknown';
-            alert(`The image '${file.name}' was rejected. The AI classified it as: ${label.replace('_', ' ')}.`);
+            containsRejected = true;
+            const errorMsg = (prediction && prediction.error) ? prediction.error : "The image was rejected.";
+            alert(`The image '${file.name}' was rejected. Reason: ${errorMsg}`);
         }
+    }
+
+    if (containsRejected) {
+        fruitImageUpload.value = '';
     }
 
     renderFruitFileList();
@@ -2611,9 +2626,7 @@ async function createInstantPreview(inputElement, previewContainer, fileListArra
 
     for (const file of files) {
         if (!isValidImage(file)) { continue; }
-        
-        const prediction = await predictImageViaBackend(file);
-
+        const prediction = await predictImageViaBackend(file, 'veg');
         let isContentValid = false;
         const expectedClass = imageType === 'veg' ? 'vegetable_peel' : 'fruit_peel';
         
