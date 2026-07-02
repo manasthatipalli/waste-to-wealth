@@ -10,7 +10,6 @@ app = Flask(__name__)
 CORS(app)
 
 MODEL_PATH = "waste_sorting_model.h5"
-# We removed the global model load here to prevent startup memory spikes
 
 CLASS_NAMES = {
     0: "fruit_peel",
@@ -28,8 +27,6 @@ def preprocess_image(image_bytes):
 
 @app.route("/predict", methods=["POST"])
 def predict():
-    # Lazy Loading: Load the model only when a request arrives
-    # 'global' allows us to reuse the loaded model for subsequent requests
     global model
     if 'model' not in globals():
         model = tf.keras.models.load_model(MODEL_PATH)

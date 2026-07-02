@@ -39,7 +39,6 @@
         .modal-overlay { background-color: rgba(0, 0, 0, 0.5); backdrop-filter: blur(4px); }
         .qr-code-placeholder { width: 250px; height: 250px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; text-align: center; border-radius: 12px; }
         .checkout-summary { position: sticky; top: 20px; }
-        /* Video background styles */
         #bg-video {
             position: fixed;
             top: 0;
@@ -48,17 +47,13 @@
             height: 100vh;
             z-index: -100;
             object-fit: cover;
-            filter: brightness(0.8); /* No blur */
+            filter: brightness(0.8);
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
         .fade-in { animation: fadeIn 0.2s ease-out; }
 
-        /* ==========================================
-           MOBILE ONLY RESPONISVE FIXES (Under 768px)
-           ========================================== */
         @media (max-width: 768px) {
-            /* 1. Fix header item layout wrapping & spacing */
             header .flex.items-center.space-x-4 {
                 flex-wrap: wrap !important;
                 gap: 10px !important;
@@ -67,13 +62,11 @@
                 margin-left: 0 !important;
             }
             
-            /* 2. Push the user info card to full width so email is readable */
             #user-info-display {
                 width: 100%;
                 margin-top: 4px;
             }
 
-            /* 3. Scale down the massive images so form inputs show up */
             .product-image {
                 height: 210px !important;
             }
