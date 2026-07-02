@@ -9,7 +9,7 @@ import os
 app = Flask(__name__)
 CORS(app)
 
-MODEL_PATH = "waste_sorting_model.keras"
+MODEL_PATH = "waste_sorting_model.h5"
 # We removed the global model load here to prevent startup memory spikes
 
 CLASS_NAMES = {

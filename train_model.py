@@ -53,4 +53,4 @@ model.fit(
     epochs=10
 )
 
-model.save('waste_sorting_model.keras')
+model.save('waste_sorting_model.h5')
